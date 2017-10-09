@@ -1,0 +1,16 @@
+CC = g++
+CC_FLAGS = -O3 -w -std=c++11
+INC_FLAGS = -I /usr/include/eigen3
+
+EXEC = main
+SOURCES = $(wildcard *.cpp)
+OBJECTS = $(SOURCES:.cpp=.o)
+
+$(EXEC): $(OBJECTS)
+	$(CC) $(CC_FLAGS) $(INC_FLAGS) $(OBJECTS) -o $(EXEC)
+
+%.o: %.cpp
+	$(CC) $(CC_FLAGS) $(INC_FLAGS) -c $< -o $@
+
+clean:
+	rm -f $(EXEC) $(OBJECTS)

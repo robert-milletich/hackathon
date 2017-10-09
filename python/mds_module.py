@@ -28,11 +28,11 @@ def mds(input_matrix):
     mat = np.array(input_matrix)
 
     # Squared proximity matrix D^(2)
-    n_ = len(mat)
+    n_    = len(mat)
     d_mat = spatial.distance.cdist(mat, mat)
-    d_sq = d_mat * d_mat
-    j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
-    b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
+    d_sq  = d_mat * d_mat
+    j_    = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
+    b_    = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
 
     # Eigendecomposition
     eig_vals, eig_vecs = SP.eigsh(b_, k=DIMENSIONS)
@@ -64,15 +64,15 @@ def fast_mds_recursion(input_matrix):
     assert len(set(len(row) for row in mat)) == 1
 
     # Calculate constants in order to partition the input matrix
-    max_mds = MAX_MDS_2
-    dims = len(mat[0])
-    sp_size = dims + DIMENSIONS
+    max_mds     = MAX_MDS_2
+    dims        = len(mat[0])
+    sp_size     = dims + DIMENSIONS
     one_ss_size = int(np.ceil(np.sqrt(len(mat) * sp_size)))
-    one_num_ss = int(np.ceil(float(len(mat)) / one_ss_size))
+    one_num_ss  = int(np.ceil(float(len(mat)) / one_ss_size))
     if one_num_ss < DIMENSIONS:
         return mds(mat)
     ss_size = int(np.ceil(float(len(mat)) / (one_num_ss - 2)))
-    num_ss = int(np.ceil(float(len(mat)) / ss_size))
+    num_ss  = int(np.ceil(float(len(mat)) / ss_size))
 
     if max_mds < sp_size * 2:
         max_mds = sp_size * 2
@@ -82,9 +82,9 @@ def fast_mds_recursion(input_matrix):
     assert ss_size > (sp_size * num_ss)
 
     # Partition the input matrix
-    ss_mat = [mat[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
+    ss_mat     = [mat[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
     to_flatten = [mtr[:sp_size] for mtr in ss_mat]
-    d_align = np.array([item for sublist in to_flatten for item in sublist])
+    d_align    = np.array([item for sublist in to_flatten for item in sublist])
 
     # Decide whether to recursively implement FastMDS on each subset
     dMDS = []
@@ -98,10 +98,10 @@ def fast_mds_recursion(input_matrix):
         if ss_size2 == ss_size:
             raise MDSError
 
-        dMDS = [fast_mds_recursion(mtr) for mtr in ss_mat]
+        dMDS    = [fast_mds_recursion(mtr) for mtr in ss_mat]
         m_align = fast_mds_recursion(d_align)
     else:
-        dMDS = [mds(np.array(mtr)) for mtr in ss_mat]
+        dMDS    = [mds(np.array(mtr)) for mtr in ss_mat]
         m_align = mds(d_align)
 
     # Compute dMDS and mMDS
@@ -117,8 +117,8 @@ def fast_mds_recursion(input_matrix):
     for m_i, mtr in enumerate(dMDS):
         sub_mMDS_i = sub_mMDS[m_i]
         sub_dMDS_i = np.c_[sub_dMDS[m_i], np.ones(len(sub_dMDS[m_i]))]
-        lstsq = np.linalg.lstsq(sub_dMDS_i, sub_mMDS_i)[0]
-        mtr_ones = np.c_[mtr, np.ones(len(mtr))]
+        lstsq      = np.linalg.lstsq(sub_dMDS_i, sub_mMDS_i)[0]
+        mtr_ones   = np.c_[mtr, np.ones(len(mtr))]
         all_mds.append(np.dot(mtr_ones, lstsq))
 
     return np.array([item for sublist in all_mds for item in sublist])
@@ -131,16 +131,16 @@ def find_strain(matrix1, matrix2):
     assert len(mat1) == len(mat2)
 
     ss_size = int(np.floor(MAX_MDS * MAX_MDS * .1 / float(len(mat1))))
-    num_ss = int(np.ceil(len(mat1) / float(ss_size)))
+    num_ss  = int(np.ceil(len(mat1) / float(ss_size)))
     ss_mat1 = [mat1[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
     ss_mat2 = [mat2[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
 
     strain_sq = 0
     for i in range(len(ss_mat1)):
-        i1, i2 = ss_mat1[i], ss_mat2[i]
-        d1 = spatial.distance.cdist(i1, mat1, metric='mahalanobis')
-        d2 = spatial.distance.cdist(i2, mat2, metric='mahalanobis')
-        d_diff = d1 - d2
+        i1, i2     = ss_mat1[i], ss_mat2[i]
+        d1         = spatial.distance.cdist(i1, mat1, metric='mahalanobis')
+        d2         = spatial.distance.cdist(i2, mat2, metric='mahalanobis')
+        d_diff     = d1 - d2
         strain_sq += np.sum(d_diff * d_diff)
 
     return np.sqrt(strain_sq)

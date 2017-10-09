@@ -1,4 +1,5 @@
 """Good for Python 2.7 and Python 3.3+"""
+#!/usr/bin/env python3
 
 __all__ = ["MAX_MDS", "mds", "fast_mds_recursion", "fast_mds"]
 __version__ = "1.4"

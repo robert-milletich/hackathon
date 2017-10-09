@@ -14,11 +14,11 @@ using namespace Eigen;
 */
 MatrixXd get_centering_matrix(const MatrixXd& M) {
     assert(M.rows() == M.cols());
-    int n = M.rows();
-    MatrixXd identity = MatrixXd::Identity(n, n);
+    int n                = M.rows();
+    MatrixXd identity    = MatrixXd::Identity(n, n);
     MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
-    MatrixXd J = identity - one_over_ns;
-    MatrixXd result = (-1.0 / 2.0) * J * M * J;
+    MatrixXd J           = identity - one_over_ns;
+    MatrixXd result      = (-1.0 / 2.0) * J * M * J;
     return result;
 }
 
@@ -62,7 +62,7 @@ eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
     assert(m <= n);
     SelfAdjointEigenSolver<MatrixXd> eigen_solver(n);
     eigen_solver.compute(M);
-    VectorXd eigenvalues = eigen_solver.eigenvalues();
+    VectorXd eigenvalues  = eigen_solver.eigenvalues();
     MatrixXd eigenvectors = eigen_solver.eigenvectors();
 
     eigen_multimap eigen_map;

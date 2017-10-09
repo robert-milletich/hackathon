@@ -1,36 +1,42 @@
+#!/usr/bin/env python3
+
 import argparse
 import csv
 from random import randint
+import numpy as np
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--filename",
-    type=str,
-    default='matrix.csv',
-    help="filename to write output to"
+    type     = str,
+    default  = 'matrix.csv',
+    help     = "filename to write output to",
+    required = True
     )
 parser.add_argument(
     "--rows",
-    type=int,
-    help="number of rows in input file"
+    type     = int,
+    help     = "number of rows in input file",
+    required = True
     )
 parser.add_argument(
     "--cols",
-    type=int,
-    help="number of columns in input file"
+    type     = int,
+    help     = "number of columns in input file",
+    required = True
     )
 parser.add_argument(
     "--low",
-    type=int,
-    default=-20,
-    help="lowest possible value for generated data"
+    type    = int,
+    default = -20,
+    help    = "lowest possible value for generated data"
     )
 parser.add_argument(
     "--high",
-    type=int,
-    default=20,
-    help="highest possible value for generated data"
+    type    = int,
+    default = 20,
+    help    = "highest possible value for generated data"
     )
 
 
@@ -48,10 +54,10 @@ def main():
     args = vars(parser.parse_args())
 
     filename = args['filename']
-    rows = args['rows']
-    cols = args['cols']
-    low = args['low']
-    high = args['high']
+    rows     = args['rows']
+    cols     = args['cols']
+    low      = args['low']
+    high     = args['high']
 
     write_data_file(filename, rows, cols, low, high)
 

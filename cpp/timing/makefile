@@ -1,5 +1,5 @@
 CC = g++
-CC_FLAGS = -O3 -w -std=c++11 -I ..
+CC_FLAGS = -O3 -g -w -std=c++11 -I ..
 
 EXEC = distance.exe
 SOURCES = $(wildcard *.cpp)

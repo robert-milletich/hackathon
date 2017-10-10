@@ -53,12 +53,10 @@ MatrixXd distance2(const MatrixXd& M) {
     return result;
 }
 
-MatrixXd distance4(double *M, const int width, const int height) {
+MatrixXd distance4(std::vector<double> &M, const int width, const int height) {
     Timer tmr;
 
-    double result[height*height];
-    for(int i=0;i<height*height;i++)
-        result[i] = 0;
+    std::vector<double> result(height*height, 0);
 
     for(int row1 = 0;        row1 < height; row1++) {
         for(int row2 = row1 + 1; row2 < height; row2++){
@@ -129,7 +127,8 @@ int main(int argc, char **argv){
         Test_Matrix(i) = rand() / (double) RAND_MAX;
     }
 
-    double *M = new double[N*N];
+
+    std::vector<double> M(N*N);
     for(int i=0;i<N*N;i++)
         M[i] = Test_Matrix(i);
 

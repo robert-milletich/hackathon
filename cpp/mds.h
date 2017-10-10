@@ -4,12 +4,15 @@
 #include <cassert>
 #include <cmath>
 #include <map>
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
 using namespace Eigen;
 
-MatrixXd get_centering_matrix(const MatrixXd&);
+void center_matrix(MatrixXd& M);
+
+// MatrixXd get_centering_matrix(const MatrixXd&);
 
 MatrixXd get_distance_squared_matrix(const MatrixXd&);
 

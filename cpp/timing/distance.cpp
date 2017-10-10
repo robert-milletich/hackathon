@@ -27,30 +27,29 @@ MatrixXd distance1(const MatrixXd& M) {
 }
 
 
-MatrixXd distance2(const MatrixXd& M) {
+MatrixXd distance2(const std::vector<double> &M, const int width, const int height) {
     Timer tmr;
 
-    const int N = M.rows();
-    MatrixXd result(N, N);
+    std::vector<double> result(height*height, 0);
 
-    for(int i = 0; i < N * N; i++) {
-        result(i) = 0;
-    }
-
-    for(int row1 = 0;        row1 < N; row1++) {
-        for(int row2 = row1 + 1; row2 < N; row2++){
+    for(int row1 = 0; row1 < height; row1++) {
+        for(int row2 = row1 + 1; row2 < height; row2++){
             double temp_sum = 0;
-            for(int i = 0; i < N; i++){
-                const double temp = M(i, row1) - M(i, row2);
+            for(int i = 0; i < width; i++){
+                const double temp = M[row1*width+i] - M[row2*width+i];
                 temp_sum += temp * temp;
             }
-            result(row1, row2) = temp_sum;
-            result(row2, row1) = temp_sum;
+            result[row1*width+row2] = temp_sum;
+            result[row2*width+row1] = temp_sum;
         }
     }
 
-    std::cerr << N << " distance2 run time = " << tmr.elapsed() << " s" << std::endl;
-    return result;
+    Eigen::MatrixXd eigres(height,height);
+    for(int i=0;i<height*height;i++)
+        eigres(i) = result[i];
+
+    std::cerr << height << " distance2 run time = " << tmr.elapsed() << " s" << std::endl;
+    return eigres;
 }
 
 MatrixXd distance4(std::vector<double> &M, const int width, const int height) {
@@ -74,39 +73,66 @@ MatrixXd distance4(std::vector<double> &M, const int width, const int height) {
     for(int i=0;i<height*height;i++)
         eigres(i) = result[i];
 
-    std::cerr << height << " distance2 run time = " << tmr.elapsed() << " s" << std::endl;
+    std::cerr << height << " distance4 run time = " << tmr.elapsed() << " s" << std::endl;
 
     return eigres;
 }
 
 
-
-MatrixXd distance3(const MatrixXd& M, const int BLOCK_SIZE) {
+MatrixXd distance5(std::vector<double> &M, const int width, const int height, const int BS) {
     Timer tmr;
 
-    const int N = M.rows();
-    MatrixXd result(N, N);
+    std::vector<double> result(height*height, 0);
 
-    for(int i = 0; i < N * N; i++) {
-        result(i) = 0;
-    }
-
-    for(int row1 = 0;        row1 < N; row1 += BLOCK_SIZE) {
-        for(int r1b  = 0; r1b < std::min(N, row1 + BLOCK_SIZE); r1b++) {
-            for(int row2 = r1b + 1; row2 < N; row2++){
-                double temp_sum = 0;
-                for(int i = 0; i < N; i++){
-                    const double temp = M(i, r1b) - M(i, row2);
-                    temp_sum += temp * temp;
-                }
-                result(r1b, row2) = temp_sum;
-                result(row2, r1b) = temp_sum;
+    for(int row1 = 0;        row1 < height; row1+=BS) {
+        for(int r1b = row1; r1b < std::min(height, row1+BS); r1b++)
+        for(int row2 = r1b + 1; row2 < height; row2++){
+            double temp_sum = 0;
+            for(int i = 0; i < width; i++){
+                const double temp = M[r1b*width+i] - M[row2*width+i];
+                temp_sum += temp * temp;
             }
+            result[r1b*height+row2] = temp_sum;
+            result[row2*height+r1b] = temp_sum;
         }
     }
 
-    std::cerr << N << " " << BLOCK_SIZE << " distance3 run time = " << tmr.elapsed() << " s" << std::endl;
-    return result;
+    Eigen::MatrixXd eigres(height,height);
+    for(int i=0;i<height*height;i++)
+        eigres(i) = result[i];
+
+    std::cerr << height << " distance5 run time = " << tmr.elapsed() << " s" << std::endl;
+
+    return eigres;
+}
+
+MatrixXd distance6(std::vector<double> &M, const int width, const int height, const int BS) {
+    Timer tmr;
+
+
+        std::vector<double> result(height*height, 0);
+
+
+    for(int row1 = 0;        row1 < height; row1 += BS)
+    for(int r1b  = 0; r1b < std::min(height, row1 + BS); r1b++)
+    for(int row2 = row1; row2 < height; row2+= BS)
+    for(int r2b  = 0; r2b < std::min(height, row2 + BS); r2b++){
+                double temp_sum = 0;
+                for(int i = 0; i < width; i++){
+                    const double temp = M[r1b*width+i] - M[r2b*width+i];
+                    temp_sum += temp * temp;
+                }
+                result[r1b*width+r2b] = temp_sum;
+                result[r2b*width+r1b] = temp_sum;
+    }
+
+    Eigen::MatrixXd eigres(height,height);
+    for(int i=0;i<height*height;i++)
+        eigres(i) = result[i];
+
+
+    std::cerr << height << " " << BS << " distance6 run time = " << tmr.elapsed() << " s" << std::endl;
+    return eigres;
 }
 
 double MatDiff(const MatrixXd &a, const MatrixXd &b){
@@ -121,23 +147,19 @@ int main(int argc, char **argv){
     }
 
     const int N = std::stoi(argv[1]);
-    MatrixXd Test_Matrix(N, N);
-
-    for (int i = 0; i < N * N; i++) {
-        Test_Matrix(i) = rand() / (double) RAND_MAX;
-    }
-
 
     std::vector<double> M(N*N);
     for(int i=0;i<N*N;i++)
-        M[i] = Test_Matrix(i);
+        M[i] = rand() / (double) RAND_MAX;
 
     std::vector<std::pair<std::string,MatrixXd> > ret;
 
     // distance1(Test_Matrix);
-    ret.emplace_back("distance2", distance2(Test_Matrix));
+    ret.emplace_back("distance2", distance2(M, N, N));
     //distance3(Test_Matrix, i);
     ret.emplace_back("distance4", distance4(M, N, N));
+    ret.emplace_back("distance5", distance5(M, N, N, 500));
+    ret.emplace_back("distance6", distance6(M, N, N, 100));
 
     for(int i=0;i<ret.size();i++)
     for(int j=i+1;j<ret.size();j++){

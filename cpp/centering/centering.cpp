@@ -146,11 +146,14 @@ MatrixXd CenterNewMatrix(T func, MatrixXd a){
 
 
 int main(int argc, char **argv){
+
+    // Cli
     if(argc!=2){
         std::cout<<"Syntax: "<<argv[0]<<" <SIZE>"<<std::endl;
         return -1;
     }
 
+    // Test data
     const int N = std::stoi(argv[1]);
     MatrixXd Test_Matrix(N, N);
 
@@ -158,18 +161,16 @@ int main(int argc, char **argv){
         Test_Matrix(i) = rand() / (double) RAND_MAX;
     }
 
-
     std::vector<double> M(N*N);
     for(int i=0;i<N*N;i++)
         M[i] = Test_Matrix(i);
 
+    // Define vector and run function
     std::vector<std::pair<std::string,MatrixXd> > ret;
+    ret.emplace_back("center_matrix_STABLE", CenterNewMatrix(center_matrix_STABLE, Test_Matrix));
+    ret.emplace_back("center_matrix", CenterNewMatrix(center_matrix, Test_Matrix));
 
-    // distance1(Test_Matrix);
-    ret.emplace_back("center_matrix_STABLE", CenterNewMatrix(center_matrix_STABLE,Test_Matrix));
-    //distance3(Test_Matrix, i);
-    ret.emplace_back("center_matrix", CenterNewMatrix(center_matrix,Test_Matrix));
-
+    // Differences
     for(int i=0;i<ret.size();i++)
     for(int j=i+1;j<ret.size();j++){
         std::cerr<<"Diff between" << " "

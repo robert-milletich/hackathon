@@ -1,15 +1,17 @@
-CC = g++
-CC_FLAGS = -O3 -g -w -std=c++11 -I ..
+CXX = pgc++ 
+CC_FLAGS = -O3 -w -std=c++11 -acc -ta=tesla,cc60 -Minfo=accel -g -O3
+INC_FLAGS = -I ../Eigen 
+LIBS = 
 
-EXEC = centering.exe
+EXEC = main.exe
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 
 $(EXEC): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXEC)
+	$(CXX) $(CC_FLAGS) $(INC_FLAGS) $(OBJECTS) -o $(EXEC) $(LIBS)
 
 %.o: %.cpp
-	$(CC) $(CC_FLAGS) -c $< -o $@
+	$(CXX) $(CC_FLAGS) $(INC_FLAGS) -c $< -o $@ $(LIBS)
 
 clean:
 	rm -f $(EXEC) $(OBJECTS)

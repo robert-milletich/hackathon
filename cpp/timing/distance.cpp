@@ -1,6 +1,8 @@
 #include <iostream>
 #include <Eigen/Core>
 #include <string>
+#include <vector>
+#include <utility>
 
 #include "Timer.hpp"
 
@@ -51,7 +53,7 @@ MatrixXd distance2(const MatrixXd& M) {
     return result;
 }
 
-void distance4(double *M, const int width, const int height) {
+MatrixXd distance4(double *M, const int width, const int height) {
     Timer tmr;
 
     double result[height*height];
@@ -70,8 +72,13 @@ void distance4(double *M, const int width, const int height) {
         }
     }
 
+    Eigen::MatrixXd eigres(height,height);
+    for(int i=0;i<height*height;i++)
+        eigres(i) = result[i];
+
     std::cerr << height << " distance2 run time = " << tmr.elapsed() << " s" << std::endl;
-    //return result;
+
+    return eigres;
 }
 
 
@@ -104,6 +111,10 @@ MatrixXd distance3(const MatrixXd& M, const int BLOCK_SIZE) {
     return result;
 }
 
+double MatDiff(const MatrixXd &a, const MatrixXd &b){
+    return (a-b).sum();
+}
+
 
 int main(int argc, char **argv){
     if(argc!=2){
@@ -122,9 +133,19 @@ int main(int argc, char **argv){
     for(int i=0;i<N*N;i++)
         M[i] = Test_Matrix(i);
 
-    // distance1(Test_Matrix);
-    distance2(Test_Matrix);
-    //distance3(Test_Matrix, i);
-    distance4(M, N, N);
+    std::vector<std::pair<std::string,MatrixXd> > ret;
 
+    // distance1(Test_Matrix);
+    ret.emplace_back("distance2", distance2(Test_Matrix));
+    //distance3(Test_Matrix, i);
+    ret.emplace_back("distance4", distance4(M, N, N));
+
+    for(int i=0;i<ret.size();i++)
+    for(int j=i+1;j<ret.size();j++){
+        std::cerr<<"Diff between" << " "
+                 <<ret.at(i).first   << " "
+                 <<ret.at(j).first   << " = "
+                 <<MatDiff(ret.at(i).second, ret.at(j).second)
+                 <<std::endl;
+    }
 }

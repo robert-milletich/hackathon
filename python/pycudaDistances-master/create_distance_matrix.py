@@ -5,6 +5,7 @@ from numba.decorators import jit, autojit
 import time
 import pyculib
 from numba import cuda
+from distances import euclidean_distances
 
 def pairwise_numpy(X):
     return np.sqrt(((X[:, None, :] - X) ** 2).sum(-1))
@@ -29,7 +30,7 @@ def pairwise_python(X):
 
 pairwise_numba = autojit(pairwise_python)
 
-rows = 10000
+rows = 100
 cols = 100
 mat = np.random.randn(rows, cols)
 
@@ -83,8 +84,8 @@ def blas_gemm(a_, b_):
     
     return c.T
 
-rows = 1000
-cols = 1000
+rows = 10
+cols = 10
 
 a = np.random.randn(rows, cols)
 b = np.random.randn(cols, rows)

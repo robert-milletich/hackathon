@@ -15,7 +15,7 @@ import sklearn
 #sk_mds = sklearn.manifold.MDS
 
 MAX_MDS = 8500
-MAX_MDS_2 = 1200
+MAX_MDS_2 = 600
 DIMENSIONS = 3
 
 class MDSError(Exception):
@@ -315,7 +315,7 @@ def find_strain(matrix1, matrix2):
 
 # For testing the function
 rows = 100000
-dims = 100
+dims = 10
 #assert rows * dims < MAX_MDS * MAX_MDS
 foo = np.random.rand(rows, dims)
 print("done creating")

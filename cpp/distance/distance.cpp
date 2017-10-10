@@ -187,6 +187,6 @@ int main(int argc, char **argv){
              <<std::endl;
   }
 
-  for(int bs=1;bs<1000;bs+=5)
-    distance6(M, width, height, bs);
+  // for(int bs=1;bs<1000;bs+=5)
+  //   distance6(M, width, height, bs);
 }

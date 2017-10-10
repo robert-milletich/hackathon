@@ -1,3 +1,6 @@
+#ifndef DOCTEST_CONFIG_DISABLE
+    #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#endif
 #include <iostream>
 #include <unistd.h>
 
@@ -5,6 +8,7 @@
 #include "fast_mds.h"
 #include "utils.h"
 
+#ifdef DOCTEST_CONFIG_DISABLE
 
 int main(int argc, char** argv) {
     int op;
@@ -61,3 +65,5 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+#endif

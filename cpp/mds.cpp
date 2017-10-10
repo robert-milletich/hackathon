@@ -1,7 +1,9 @@
+#include <cstdlib>
 #include <iostream>
 
 #include "mds.h"
 #include "Timer.hpp"
+#include "doctest.h"
 
 using namespace Eigen;
 
@@ -85,6 +87,26 @@ MatrixXd get_distance_squared_matrix(const MatrixXd& M) {
         }
     }
     return result;
+}
+
+TEST_CASE("Centering matrix"){
+    const int N = 100;
+    MatrixXd Test_Matrix(N, N);
+
+    for (int i = 0; i < N * N; i++) {
+        Test_Matrix(i) = rand() / (double) RAND_MAX;
+    }
+
+    auto Test_Matrix_Copy = Test_Matrix;
+
+    center_matrix(Test_Matrix);
+
+    MatrixXd identity    = MatrixXd::Identity(N, N);
+    MatrixXd one_over_ns = MatrixXd::Constant(N, N, 1.0 / (float) N);
+    MatrixXd J           = identity - one_over_ns;
+    MatrixXd result      = (-1.0 / 2.0) * J * Test_Matrix_Copy * J;
+
+    CHECK((Test_Matrix - result).sum() == doctest::Approx(0));
 }
 
 

@@ -118,9 +118,9 @@ int main(int argc, char **argv){
         Test_Matrix(i) = rand() / (double) RAND_MAX;
     }
 
-    double M[N*N];
+    double *M = new double[N*N];
     for(int i=0;i<N*N;i++)
-        M[i]=Test_Matrix(i);
+        M[i] = Test_Matrix(i);
 
     // distance1(Test_Matrix);
     distance2(Test_Matrix);

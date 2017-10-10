@@ -21,7 +21,7 @@ void PrintVector(std::string id, const std::vector<double> &a, const int N){
 }
 
 
-void center_matrix1(MatrixXd &M) {
+void center_matrix_eigen(MatrixXd &M) {
   Timer tmr;
 
   const int N          = M.rows();
@@ -30,7 +30,7 @@ void center_matrix1(MatrixXd &M) {
   MatrixXd J           = identity - one_over_ns;
   M                    = (-1.0 / 2.0) * J * M * J;
 
-  std::cerr << N << " center_matrix1 run time = " << std::fixed << std::setprecision(10) << tmr.elapsed() << " s" << std::endl;
+  std::cerr << N << " center_matrix_eigen run time = " << std::fixed << std::setprecision(10) << tmr.elapsed() << " s" << std::endl;
 }
 
 /**
@@ -214,7 +214,8 @@ int main(int argc, char **argv){
 
     // Define vector and run function
     std::vector<std::pair<std::string, std::vector<double> > > ret;
-    ret.emplace_back("center_matrix1",       EigenTest      (center_matrix1,       test_matrix, N));
+    if(N<500)
+      ret.emplace_back("center_matrix_eigen",       EigenTest      (center_matrix_eigen,       test_matrix, N));
     ret.emplace_back("center_matrix_STABLE", CenterNewMatrix(center_matrix_STABLE, test_matrix, N));
     ret.emplace_back("center_matrix",        CenterNewMatrix(center_matrix,        test_matrix, N));
 

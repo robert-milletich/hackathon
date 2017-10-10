@@ -1,5 +1,5 @@
 CC = clang++
-CC_FLAGS = -O3 -w -std=c++11 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE -Rpass-analysis=loop-vectorize 
+CC_FLAGS = -O3 -w -std=c++11 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE -Rpass-analysis=loop-vectorize -DDOCTEST_CONFIG_DISABLE
 #-Rpass-analysis=.*
 #-fdump-rtl-loop2 -ftree-vectorizer-verbose=4
 INC_FLAGS = -I /usr/include/eigen3

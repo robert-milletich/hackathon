@@ -1,5 +1,5 @@
 CXX = g++
-CC_FLAGS = -O3 -w -std=c++11 
+CC_FLAGS = -O3 -w -std=c++11 -DDOCTEST_CONFIG_DISABLE
 INC_FLAGS = -I ./eigen -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE -ffast-math
 LIBS = -llapacke -llapack -lblas 
 #LIBS = -L/sw/summitdev/cuda/8.0.54/lib64 -lnvblas -llapacke -lblas

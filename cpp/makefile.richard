@@ -1,17 +1,19 @@
-CXX = g++
-CC_FLAGS = -O3 -w -std=c++11 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE -ffast-math
-INC_FLAGS = -I ./eigen
-LIBS = -L${OLCF_ESSL_ROOT}/lib64 -lessl -llapacke
+CC = clang++
+CC_FLAGS = -O3 -w -std=c++11 -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE -Rpass-analysis=loop-vectorize 
+#-Rpass-analysis=.*
+#-fdump-rtl-loop2 -ftree-vectorizer-verbose=4
+INC_FLAGS = -I /usr/include/eigen3
+LIBS = -llapacke -llapack -lblas
 
-EXEC = main.exe
+EXEC = main
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 
 $(EXEC): $(OBJECTS)
-	$(CXX) $(CC_FLAGS) $(INC_FLAGS) $(OBJECTS) -o $(EXEC) $(LIBS)
+	$(CC) $(CC_FLAGS) $(INC_FLAGS) $(OBJECTS) -o $(EXEC) $(LIBS)
 
 %.o: %.cpp
-	$(CXX) $(CC_FLAGS) $(INC_FLAGS) -c $< -o $@ $(LIBS)
+	$(CC) $(CC_FLAGS) $(INC_FLAGS) -c $< -o $@ $(LIBS)
 
 clean:
 	rm -f $(EXEC) $(OBJECTS)

@@ -6,7 +6,7 @@ import numpy as np
 
 
 def calc_error(a, b):
-    """ADD"""
+    """Calculates error between two MDS/FastMDS solutions"""
     diff = a-b
     diff = np.multiply(diff,diff)
     diff = np.sqrt(np.sum(diff, axis=1))

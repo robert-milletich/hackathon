@@ -1,4 +1,7 @@
+#include <iostream>
+
 #include "mds.h"
+#include "Timer.hpp"
 
 using namespace Eigen;
 
@@ -12,15 +15,54 @@ using namespace Eigen;
     @param M - the matrix to generate the centering matrix from
     @return - the centering matrix for M
 */
-MatrixXd get_centering_matrix(const MatrixXd& M) {
+// MatrixXd get_centering_matrix(const MatrixXd& M) {
+//     Timer tmr;
+//     assert(M.rows() == M.cols());
+//     int n                = M.rows();
+//     MatrixXd identity    = MatrixXd::Identity(n, n);
+//     MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
+//     MatrixXd J           = identity - one_over_ns;
+//     MatrixXd result      = (-1.0 / 2.0) * J * M * J;
+//
+//     std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
+//     return result;
+// }
+
+void center_matrix(MatrixXd& M) {
+    Timer tmr;
     assert(M.rows() == M.cols());
-    int n                = M.rows();
-    MatrixXd identity    = MatrixXd::Identity(n, n);
-    MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
-    MatrixXd J           = identity - one_over_ns;
-    MatrixXd result      = (-1.0 / 2.0) * J * M * J;
-    return result;
+    const int N = M.cols();
+    std::vector<double> row_accum(N, 0.0);
+    std::vector<double> col_accum(N, 0.0);
+
+    double matrix_accum = 0;
+    for (int j = 0; j < N; j++) {
+        double temp = 0;
+        for (int i = 0; i < N; i++) {
+            row_accum[i] += M(i, j);
+            temp += M(i, j);
+            matrix_accum += M(i, j);
+        }
+        col_accum[j] = temp;
+    }
+
+    for (int i = 0; i < N; i++) {
+        row_accum[i] /= N;
+        col_accum[i] /= N;
+    }
+
+    matrix_accum /= N * N;
+
+    for (int j = 0; j < N; j++) {
+        for (int i = 0; i < N; i++) {
+            M(i, j) += (matrix_accum -(row_accum[i] + col_accum[j]));
+        }
+    }
+
+    std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
 }
+
+
 
 
 /**
@@ -118,9 +160,22 @@ MatrixXd get_x_matrix(const MatrixXd& M, int m) {
     @return - the matrix obtained from performing MDS to project M to m
     dimensions
 */
+// MatrixXd mds(const MatrixXd& M, int m) {
+//     Timer tmr;
+//     MatrixXd D = get_distance_squared_matrix(M);
+//     MatrixXd B = get_centering_matrix(D);
+//     MatrixXd X = get_x_matrix(B, m);
+//
+//     std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
+//     return X;
+// }
+
 MatrixXd mds(const MatrixXd& M, int m) {
+    Timer tmr;
     MatrixXd D = get_distance_squared_matrix(M);
-    MatrixXd B = get_centering_matrix(D);
-    MatrixXd X = get_x_matrix(B, m);
+    center_matrix(D);
+    MatrixXd X = get_x_matrix(D, m);
+
+    std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
     return X;
 }

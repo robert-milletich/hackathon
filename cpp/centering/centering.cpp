@@ -21,6 +21,15 @@ void PrintVector(std::string id, const std::vector<double> &a, const int N){
 }
 
 
+/**
+    Returns the centering matrix for the matrix M, which is given by
+    -1/2 J * M * J
+    (where J = I - 1/n * 1, I is the identity matrix, and 1 is the
+    constant-valued matrix of 1s)
+
+    @param M - the matrix to generate the centering matrix from
+    @return - the centering matrix for M
+*/
 void center_matrix_eigen(MatrixXd &M) {
   Timer tmr;
 
@@ -33,27 +42,7 @@ void center_matrix_eigen(MatrixXd &M) {
   std::cerr << N << " center_matrix_eigen run time = " << std::fixed << std::setprecision(10) << tmr.elapsed() << " s" << std::endl;
 }
 
-/**
-    Returns the centering matrix for the matrix M, which is given by
-    -1/2 J * M * J
-    (where J = I - 1/n * 1, I is the identity matrix, and 1 is the
-    constant-valued matrix of 1s)
 
-    @param M - the matrix to generate the centering matrix from
-    @return - the centering matrix for M
-*/
-// MatrixXd get_centering_matrix(const MatrixXd& M) {
-//     Timer tmr;
-//     assert(M.rows() == M.cols());
-//     int n                = M.rows();
-//     MatrixXd identity    = MatrixXd::Identity(n, n);
-//     MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
-//     MatrixXd J           = identity - one_over_ns;
-//     MatrixXd result      = (-1.0 / 2.0) * J * M * J;
-//
-//     std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
-//     return result;
-// }
 
 void center_matrix_STABLE(std::vector<double> &M, const int N) {
   Timer tmr;

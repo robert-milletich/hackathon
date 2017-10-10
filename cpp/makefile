@@ -1,7 +1,7 @@
 CC = g++
 CC_FLAGS = -w -std=c++11 -I .
 
-EXEC = main
+EXEC = main.exe
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 

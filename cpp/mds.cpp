@@ -132,6 +132,7 @@ eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
 MatrixXd get_x_matrix(const MatrixXd& M, int m) {
+    Timer tmr;
     eigen_multimap eigen_map = get_eigen_map(M, m);
     int n = M.rows();
     // E_m - the (n X m) matrix of m eigenvectors corresponding to the m largest eigenvalues
@@ -147,6 +148,7 @@ MatrixXd get_x_matrix(const MatrixXd& M, int m) {
         index++;
     }
 
+    std::cerr << "get x run time = " << tmr.elapsed() << " s" << std::endl;
     return E_m * Lambda_m_sqrt;
 }
 

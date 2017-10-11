@@ -87,7 +87,7 @@ void center_matrix(std::vector<double> &M, const int N) {
   for(int i = 0; i < N * N; i++)
     M[i] *= -0.5;
 
-    std::cerr << "center matrix run time = " << tmr.elapsed() << " s" << std::endl;
+  std::cerr << "center matrix run time = " << tmr.elapsed() << " s" << std::endl;
 }
 
 
@@ -132,9 +132,8 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
 
-MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int m) {
+MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int num_eigvals) {
     Timer tmr;
-    int n = M.rows();
 
     // Construct matrix operation object using the wrapper class DenseGenMatProd
     Spectra::DenseSymMatProd<double> op(M);
@@ -144,7 +143,7 @@ MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int m) {
 
     // Initialize and compute
     eigs.init();
-    int nconv = eigs.compute();
+    eigs.compute();
 
     // Retrieve results
     if(eigs.info() != Spectra::SUCCESSFUL)
@@ -155,8 +154,8 @@ MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int m) {
 
     // Lambda_m_srt - the (m X m) diagonal matrix with entries corresponding to square roots
     // of the m largest eigenvalues
-    MatrixXd Lambda_m_sqrt = MatrixXd::Constant(m, m, 0.0);
-    for (int i=0; i<m; i++){
+    MatrixXd Lambda_m_sqrt = MatrixXd::Constant(num_eigvals, num_eigvals, 0.0);
+    for (int i=0; i<num_eigvals; i++){
         Lambda_m_sqrt(i, i) = sqrt(evalues(i));
     }
 
@@ -184,16 +183,16 @@ MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int m) {
 //     return X;
 // }
 
-MatrixXd mds(const MatrixXd& M, int m) {
-    Timer tmr;
-    auto mvec = MatrixToArray(M);
-    auto D = get_distance_squared_matrix(mvec, M.rows(), M.cols());
-    center_matrix(D, M.rows());
-    auto Dmat = ArrayToMatrix(D, M.rows(), M.cols());
-    MatrixXd X = GetEigenProjectedMatrix(Dmat, m);
+MatrixXd mds(const MatrixXd& M, int num_eigvals) {
+  Timer tmr;
+  auto mvec = MatrixToArray(M);
+  auto D = get_distance_squared_matrix(mvec, M.cols(), M.rows());
+  center_matrix(D, M.rows());
+  auto Dmat = ArrayToMatrix(D, M.cols(), M.rows());
+  MatrixXd X = GetEigenProjectedMatrix(Dmat, num_eigvals);
 
-    std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
-    return X;
+  std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
+  return X;
 }
 
 

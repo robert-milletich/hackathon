@@ -1,5 +1,7 @@
-CC = g++
-CC_FLAGS = -O3 -g -w -std=c++11 -I ..
+CXX = pgc++ 
+CC_FLAGS = -O3 -w -std=c++11 -acc -ta=tesla,cc60 -Minfo=accel -g -O3
+INC_FLAGS = -I ..
+LIBS = 
 
 EXEC = distance.exe
 SOURCES = $(wildcard *.cpp)

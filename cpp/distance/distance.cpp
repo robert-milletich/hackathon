@@ -9,8 +9,8 @@
 
 using namespace Eigen;
 
-void PrintVector(std::string id, const std::vector<double> &a, const int height, const int width){
-  return;
+void PrintVector(std::string id, const std::vector<double> &a, const int width, const int height){
+  // return;
 
   std::cout<<id<<std::endl;
   for(int y=0;y<height;y++){
@@ -124,21 +124,25 @@ std::vector<double> distance_gpu(const std::vector<double>& M, const int width, 
     const double *data = M.data();
     double *result_data = result.data();
 
-    #pragma acc parallel loop collapse(2) independent copy(data[0 : width * height])
+    #pragma acc kernels default(none) copyin(data[0 : width * height]) copyout(result_data[0: height * height])
+    #pragma acc loop independent collapse(2)
     for(int row1 = 0; row1 < height; row1++) {
-        for(int row2 = row1 + 1; row2 < height; row2++){
+        // for(int row2 = row1 + 1; row2 < height; row2++){
+        for(int row2 = 0; row2 < height; row2++){
             double temp_sum = 0;
-            #pragma acc parallel loop reduction(+:temp_sum)
+            // #pragma acc loop reduction(+:temp_sum)
+            #pragma acc loop seq
             for(int i = 0; i < width; i++){
                 const double temp = data[row1 * width + i] - data[row2 * width + i];
                 temp_sum += temp * temp;
             }
-            result_data[row1 * width + row2] = temp_sum;
-            result_data[row2 * width + row1] = temp_sum;
+            result_data[row1 * height + row2] = temp_sum;
+            // result_data[row2 * width + row1] = temp_sum;
         }
     }
 
-    std::cerr << height << " distance run time = " << tmr.elapsed() << " s" << std::endl;
+
+    std::cerr << height << " distance gpu run time = " << tmr.elapsed() << " s" << std::endl;
     return result;
 }
 
@@ -203,7 +207,7 @@ int main(int argc, char **argv){
   ret.emplace_back("distance_gpu", distance_gpu(M, width, height));
 
   for(const auto &i: ret)
-    PrintVector(i.first, i.second, width, height);
+    PrintVector(i.first, i.second, height, height);
 
   for(int i=0;i<ret.size();i++)
   for(int j=i+1;j<ret.size();j++){

@@ -89,25 +89,25 @@ void center_matrix(std::vector<double> &M, const int N) {
   // OpenACC kernels
   #pragma acc kernels copy(mvec[0:N*N])
   {
-    for(int i=0;i<N;i++) row[i] = 0;
-    for(int i=0;i<N;i++) col[i] = 0;
+    for(int x=0;x<N;x++) row[i] = 0;
+    for(int y=0;y<N;y++) col[i] = 0;
 
     // Row sums
     #pragma acc loop collapse(2) independent
-    for (int j = 0; j < N; j++) {
-      for (int i = 0; i < N; i++) {
-        row[i] += mvec[i*N + j];
+    for (int y = 0; y < N; y++) {
+      for (int x = 0; x < N; x++) {
+        row[x] += mvec[y*N + x];
       }
     }
 
     // Column sums
     #pragma acc loop independent
-    for (int j = 0; j < N; j++) {
-      double temp = 0;
-      for (int i = 0; i < N; i++) {
-        temp += mvec[i*N + j];
+    for (int y = 0; y < N; y++) {
+      double colsum = 0;
+      for (int x = 0; x < N; x++) {
+        colsum += mvec[y*N + x];
       }
-      col[j] = temp;
+      col[j] = colsum;
     }
 
     // Sum of all elements
@@ -117,23 +117,25 @@ void center_matrix(std::vector<double> &M, const int N) {
     }
 
     // Averages for rows and columns
-    for(int i=0;i<N;i++) row[i] /= N;
-    for(int i=0;i<N;i++) col[i] /= N;
+    for(int x=0;x<N;x++) row[x] /= N;
+    for(int y=0;y<N;y++) col[y] /= N;
 
     // Grand mean
     matrix_accum /= N * N;
 
     // Double center each value
     #pragma acc loop collapse(2) independent
-    for(int j = 0; j < N; j++) {
-      for (int i = 0; i < N; i++) {
-        mvec[i*N + j] += (matrix_accum - (row[i] + col[j]));
+    for(int y = 0; y < N; y++) {
+      for (int x = 0; x < N; x++) {
+        mvec[y*N + x] += (matrix_accum - (row[x] + col[y]));
       }
     }
+
+    for(int i = 0; i < N * N; i++)
+      M[i] *= -0.5;  
   }
 
-  for(int i = 0; i < N * N; i++)
-    M[i] *= -0.5;  
+
 
   delete row;
   delete col;

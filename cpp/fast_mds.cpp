@@ -160,10 +160,13 @@ MatrixXd get_intercept_matrix(const MatrixXd& M) {
 vector_of_matrix_pairs get_ai_xi_matrices(const MatrixXd& M, int p, int m) {
     std::vector<MatrixXd> partition = partition_matrix(M, p);
 
-    vector_of_matrix_pairs result;
+    vector_of_matrix_pairs result(partition.size());
 
-    for (std::vector<MatrixXd>::iterator it = partition.begin(); it != partition.end(); it++) {
-        result.push_back(std::make_pair(*it, mds(*it, m)));
+    #pragma omp parallel for
+    for(unsigned int i=0;i<partition.size();i++){
+        const auto &thismat = partition.at(i);
+        const auto ret = mds(thismat, m);
+        result.at(i) = std::make_pair(thismat, ret);
     }
 
     return result;

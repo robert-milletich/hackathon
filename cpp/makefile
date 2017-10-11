@@ -1,5 +1,5 @@
 CC = g++
-CC_FLAGS = -g -pg -O3 -w -std=c++11 -I . -DDOCTEST_CONFIG_DISABLE
+CC_FLAGS = -g -O3 -w -std=c++11 -I . -fopenmp -DEIGEN_DONT_PARALLELIZE -DDOCTEST_CONFIG_DISABLE -Wall -Wextra
 
 EXEC = main.exe
 SOURCES = $(wildcard *.cpp)

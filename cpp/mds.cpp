@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
 #include "mds.h"
 #include "Timer.hpp"
@@ -6,6 +7,7 @@
 #include <spectra/SymEigsSolver.h> 
 #include <stdexcept>
 #include <map>
+#include "doctest.h"
 
 using namespace Eigen;
 
@@ -16,7 +18,7 @@ MatrixXd ArrayToMatrix(const std::vector<double> &array, const int width, const 
     MatrixXd matrix(height, width);
     for(int y=0; y<height; y++){
         for(int x=0; x<width; x++){
-            matrix(y, x) = array[y*width + x];
+            matrix(y, x) = array.at(y*width + x);
         }
     }
     return matrix;
@@ -28,7 +30,7 @@ std::vector<double> MatrixToArray(const MatrixXd& mat) {
     std::vector<double> flattened(height*width);
     for(int y=0; y<height; y++){
         for(int x=0; x<width; x++){
-            flattened[y*width + x] = mat(y, x);
+            flattened.at(y*width + x) = mat(y, x);
         }
     }
     return flattened;
@@ -192,4 +194,54 @@ MatrixXd mds(const MatrixXd& M, int m) {
 
     std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
     return X;
+}
+
+
+
+TEST_CASE("mvec display"){
+  const int height = 5;
+  const int width  = 10;
+
+  MatrixXd mat(height,width);
+  for(int i=0;i<height*width;i++)
+    mat(i) = rand()/(double)RAND_MAX;
+
+  const auto vec     = MatrixToArray(mat);
+  const auto matback = ArrayToMatrix(vec, width, height);
+
+  auto same = mat==matback;
+
+  CHECK(same);
+}
+
+
+
+TEST_CASE("Distance"){
+  const int height = 100;
+  const int width  = 5;
+
+  MatrixXd mat(height,width);
+  for(int i=0;i<height*width;i++)
+    mat(i) = rand()/(double)RAND_MAX;
+
+  const auto vec     = MatrixToArray(mat);
+  const auto distvec = get_distance_squared_matrix(vec,width,height);
+
+  MatrixXd result = MatrixXd(height,height);
+  for (int i = 0; i < mat.rows(); i++)
+  for (int j = 0; j < mat.rows(); j++) {
+    // since distance matrices are symmetric and 0 on the diagonal,
+    // redundant computations could be avoided by setting
+    //  result(i, i) = 0, and result(i, j) = result(j, i) when i > j
+    result(i, j) = (mat.row(i) - mat.row(j)).squaredNorm();
+  }
+
+  const auto distmat = ArrayToMatrix(distvec, height, height);
+
+  REQUIRE(result.rows()==distmat.rows());
+  REQUIRE(result.cols()==distmat.cols());
+
+  const auto diff = (distmat-result).array().abs().sum();
+
+  CHECK(diff==doctest::Approx(0));
 }

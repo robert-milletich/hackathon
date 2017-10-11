@@ -245,3 +245,31 @@ TEST_CASE("Distance"){
 
   CHECK(diff==doctest::Approx(0));
 }
+
+
+TEST_CASE("Centering"){
+  const int N = 100;
+
+  MatrixXd mat(N, N);
+  for(int i=0; i<N; i++){
+    for(int j=i+1; j<N; j++){
+      mat(i, j) = mat(j, i) = rand()/(double)RAND_MAX;
+    }
+  }
+
+  // Centering using eigen
+  MatrixXd identity    = MatrixXd::Identity(N, N);
+  MatrixXd one_over_ns = MatrixXd::Constant(N, N, 1.0 / N);
+  MatrixXd J           = identity - one_over_ns;
+  auto eigen_res       = (-1.0 / 2.0) * J * mat * J;
+
+  // Centering using flattened array
+  auto mat_vec = MatrixToArray(mat);
+  center_matrix(mat_vec, N);
+  auto our_mat = ArrayToMatrix(mat_vec, N, N);
+
+  const auto diff = (eigen_res-our_mat).array().abs().sum();
+
+  CHECK(diff==doctest::Approx(0));
+}
+

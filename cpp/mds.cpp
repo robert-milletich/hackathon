@@ -121,7 +121,7 @@ TEST_CASE("Centering matrix"){
     @return - the multimap containing the eigenvalue, eigenvector key, value
     pairs for the m largest eigenvalues of the matrix M
 */
-eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
+eigen_multimap GetKLargestEigenvalues(const MatrixXd& M, int m)  {
     int n = M.rows();
     assert(m <= n);
     SelfAdjointEigenSolver<MatrixXd> eigen_solver(n);
@@ -153,9 +153,9 @@ eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
     @param m - the value of m for E_m and Lambda_m_sqrt
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
-MatrixXd get_x_matrix(const MatrixXd& M, int m) {
+MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int m) {
     Timer tmr;
-    eigen_multimap eigen_map = get_eigen_map(M, m);
+    eigen_multimap eigen_map = GetKLargestEigenvalues(M, m);
     int n = M.rows();
     // E_m - the (n X m) matrix of m eigenvectors corresponding to the m largest eigenvalues
     MatrixXd E_m = MatrixXd(n , m);
@@ -188,7 +188,7 @@ MatrixXd get_x_matrix(const MatrixXd& M, int m) {
 //     Timer tmr;
 //     MatrixXd D = get_distance_squared_matrix(M);
 //     MatrixXd B = get_centering_matrix(D);
-//     MatrixXd X = get_x_matrix(B, m);
+//     MatrixXd X = GetEigenProjectedMatrix(B, m);
 //
 //     std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
 //     return X;
@@ -198,7 +198,7 @@ MatrixXd mds(const MatrixXd& M, int m) {
     Timer tmr;
     MatrixXd D = get_distance_squared_matrix(M);
     center_matrix(D);
-    MatrixXd X = get_x_matrix(D, m);
+    MatrixXd X = GetEigenProjectedMatrix(D, m);
 
     std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
     return X;

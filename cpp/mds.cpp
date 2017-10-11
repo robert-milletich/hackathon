@@ -12,7 +12,7 @@
 using namespace Eigen;
 
 typedef std::multimap<double, VectorXd, std::greater<double> > eigen_multimap;
-
+typedef std::pair<VectorXd, MatrixXd> topeigs_t;
 
 MatrixXd ArrayToMatrix(const std::vector<double> &array, const int width, const int height) {
     MatrixXd matrix(height, width);
@@ -120,6 +120,33 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
 }
 
 
+topeigs_t GetTopEigenValues(const MatrixXd &mat, const int num_eigvals){
+  assert(mat.rows()==mat.cols());
+
+  Timer tmr;
+
+  // Construct matrix operation object using the wrapper clagss DenseGenMatProd
+  Spectra::DenseSymMatProd<double> op(mat);
+
+  // Eigensolver
+  Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 6);
+
+  // Initialize and compute
+  eigs.init();
+  eigs.compute();
+
+  // Retrieve results
+  if(eigs.info() != Spectra::SUCCESSFUL)
+      throw std::runtime_error("Sorry about your luck.");
+
+  const auto evalues = eigs.eigenvalues();
+  const auto E_m     = eigs.eigenvectors();
+
+  std::cerr << "GetTopEigenValues run time = " << tmr.elapsed() << " s" << std::endl;
+
+  return std::make_pair(evalues, E_m);
+}
+
 /**
     Return the X matrix for the matrix M and the integer m, which is given by
     E_m * Lambda_m_sqrt
@@ -132,35 +159,20 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
 
-MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int num_eigvals) {
-    Timer tmr;
+MatrixXd GetEigenProjectedMatrix(const topeigs_t &topeigs, const MatrixXd& M) {
+  Timer tmr;
 
-    // Construct matrix operation object using the wrapper class DenseGenMatProd
-    Spectra::DenseSymMatProd<double> op(M);
+  const int num_eigvals = topeigs.first.size();
 
-    // Eigensolver
-    Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 10);
+  // Lambda_m_srt - the (m X m) diagonal matrix with entries corresponding to square roots
+  // of the m largest eigenvalues
+  MatrixXd Lambda_m_sqrt = MatrixXd::Constant(num_eigvals, num_eigvals, 0.0);
+  for (int i=0; i<num_eigvals; i++){
+      Lambda_m_sqrt(i, i) = sqrt(topeigs.first(i));
+  }
 
-    // Initialize and compute
-    eigs.init();
-    eigs.compute();
-
-    // Retrieve results
-    if(eigs.info() != Spectra::SUCCESSFUL)
-        throw std::runtime_error("Sorry about your luck.");
-
-    const auto evalues = eigs.eigenvalues();
-    const auto E_m     = eigs.eigenvectors();
-
-    // Lambda_m_srt - the (m X m) diagonal matrix with entries corresponding to square roots
-    // of the m largest eigenvalues
-    MatrixXd Lambda_m_sqrt = MatrixXd::Constant(num_eigvals, num_eigvals, 0.0);
-    for (int i=0; i<num_eigvals; i++){
-        Lambda_m_sqrt(i, i) = sqrt(evalues(i));
-    }
-
-    std::cerr << "get x run time = " << tmr.elapsed() << " s" << std::endl;
-    return E_m * Lambda_m_sqrt;
+  std::cerr << "GetEigenProjectedMatrix run time = " << tmr.elapsed() << " s" << std::endl;
+  return topeigs.second * Lambda_m_sqrt;
 }
 
 
@@ -188,8 +200,9 @@ MatrixXd mds(const MatrixXd& M, int num_eigvals) {
   auto mvec = MatrixToArray(M);
   auto D = get_distance_squared_matrix(mvec, M.cols(), M.rows());
   center_matrix(D, M.rows());
-  auto Dmat = ArrayToMatrix(D, M.rows(), M.rows());
-  MatrixXd X = GetEigenProjectedMatrix(Dmat, num_eigvals);
+  const auto Dmat    = ArrayToMatrix(D, M.rows(), M.rows());
+  const auto topeigs = GetTopEigenValues(Dmat, num_eigvals);
+  const auto X       = GetEigenProjectedMatrix(topeigs, Dmat);
 
   std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
   return X;
@@ -270,5 +283,42 @@ TEST_CASE("Centering"){
   const auto diff = (eigen_res-our_mat).array().abs().sum();
 
   CHECK(diff==doctest::Approx(0));
+}
+
+
+
+TEST_CASE("Top k eigenvalues"){
+  // Create symmetric test data
+  const int N = 100;
+  MatrixXd mat(N, N);
+  for(int i=0; i<N; i++){
+    for(int j=i+1; j<N; j++){
+      mat(i, j) = mat(j, i) = rand()/(double)RAND_MAX;
+    }
+  }
+  const int n_eign = 3;
+
+  //Eigen
+  SelfAdjointEigenSolver<MatrixXd> eigen_solver(N);
+  eigen_solver.compute(mat);
+  VectorXd eigenvalues  = eigen_solver.eigenvalues();
+  MatrixXd eigenvectors = eigen_solver.eigenvectors();
+  typedef std::pair<double,VectorXd> eig_vec_pair;
+  std::vector< eig_vec_pair > eig_vecs;
+  for(int i=0;i<eigenvalues.size();i++)
+    eig_vecs.emplace_back( eigenvalues(i), eigenvectors.col(i) );
+  std::sort(eig_vecs.begin(), eig_vecs.end(), [](const eig_vec_pair &a, const eig_vec_pair &b){ return a.first>b.first; });
+
+  //Spectra
+  const auto eigenpairs_spectra = GetTopEigenValues(mat, n_eign);
+
+  //Calculate difference
+  double result = 0;
+  for(int i=0; i<n_eign; i++){
+    result += std::abs(eigenpairs_spectra.first(i) - eig_vecs[i].first);
+  }
+
+  CHECK(result==doctest::Approx(0));
+
 }
 

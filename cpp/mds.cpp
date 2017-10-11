@@ -188,7 +188,7 @@ MatrixXd mds(const MatrixXd& M, int num_eigvals) {
   auto mvec = MatrixToArray(M);
   auto D = get_distance_squared_matrix(mvec, M.cols(), M.rows());
   center_matrix(D, M.rows());
-  auto Dmat = ArrayToMatrix(D, M.cols(), M.rows());
+  auto Dmat = ArrayToMatrix(D, M.rows(), M.rows());
   MatrixXd X = GetEigenProjectedMatrix(Dmat, num_eigvals);
 
   std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;

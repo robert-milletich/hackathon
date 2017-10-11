@@ -139,7 +139,7 @@ MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int num_eigvals) {
     Spectra::DenseSymMatProd<double> op(M);
 
     // Eigensolver
-    Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 6);
+    Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 10);
 
     // Initialize and compute
     eigs.init();

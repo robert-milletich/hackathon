@@ -3,24 +3,13 @@
 
 #include <cassert>
 #include <cmath>
-#include <map>
-#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
+#include <Eigen/Dense>
 
 using namespace Eigen;
 
-void center_matrix(MatrixXd& M);
-
-// MatrixXd get_centering_matrix(const MatrixXd&);
-
-MatrixXd get_distance_squared_matrix(const MatrixXd&);
-
-MatrixXd get_distance_squared_matrix(const std::vector<double>&, const int, const int);
-
-typedef std::multimap<double, VectorXd, std::greater<double> > eigen_multimap;
-
-eigen_multimap GetKLargestEigenvalues(const MatrixXd&, int);
+//void center_matrix(MatrixXd& M);
 
 MatrixXd GetEigenProjectedMatrix(const MatrixXd&, int);
 

@@ -1,5 +1,5 @@
 CC = g++
-CC_FLAGS = -w -std=c++11 -I . -DDOCTEST_CONFIG_DISABLE
+CC_FLAGS = -O3 -w -std=c++11 -I . -DDOCTEST_CONFIG_DISABLE
 
 EXEC = main.exe
 SOURCES = $(wildcard *.cpp)

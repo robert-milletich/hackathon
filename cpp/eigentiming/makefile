@@ -5,7 +5,7 @@ INC_FLAGS = -I ..
 LIBS = 
 
 EXEC = eigentiming.exe
-SOURCES = eigentiming.cpp ../mds.cpp Timer.cpp
+SOURCES = eigentiming.cpp Timer.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 $(EXEC): $(OBJECTS)

@@ -119,23 +119,24 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
     pairs for the m largest eigenvalues of the matrix M
 */
 eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
-    int n = M.rows();
-    assert(m <= n);
-    SelfAdjointEigenSolver<MatrixXd> eigen_solver(n);
-    eigen_solver.compute(M);
-    VectorXd eigenvalues = eigen_solver.eigenvalues();
-    MatrixXd eigenvectors = eigen_solver.eigenvectors();
+  assert(M.cols()==M.rows());
+  int n = M.rows();
+  assert(m <= n);
+  SelfAdjointEigenSolver<MatrixXd> eigen_solver(n);
+  eigen_solver.compute(M);
+  VectorXd eigenvalues = eigen_solver.eigenvalues();
+  MatrixXd eigenvectors = eigen_solver.eigenvectors();
 
-    eigen_multimap eigen_map;
-    for (int i = 0; i < eigenvalues.size(); i++) {
-        eigen_map.insert(std::make_pair(eigenvalues(i), eigenvectors.col(i)));
-    }
-    eigen_multimap result;
+  eigen_multimap eigen_map;
+  for (int i = 0; i < eigenvalues.size(); i++) {
+      eigen_map.insert(std::make_pair(eigenvalues(i), eigenvectors.col(i)));
+  }
+  eigen_multimap result;
 
-    for (eigen_multimap::iterator it = eigen_map.begin(); it != std::next(eigen_map.begin(), m); it++) {
-        result.insert(std::make_pair((*it).first, (*it).second));
-    }
-    return result;
+  for (eigen_multimap::iterator it = eigen_map.begin(); it != std::next(eigen_map.begin(), m); it++) {
+      result.insert(std::make_pair((*it).first, (*it).second));
+  }
+  return result;
 }
 
 
@@ -151,6 +152,7 @@ eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
 MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int num_eigvals) {
+  assert(M.cols()==M.rows());
   Timer tmr;
 
   eigen_multimap eigen_map = get_eigen_map(M, num_eigvals);
@@ -197,7 +199,7 @@ MatrixXd mds(const MatrixXd& M, int num_eigvals) {
   auto mvec = MatrixToArray(M);
   auto D = get_distance_squared_matrix(mvec, M.cols(), M.rows());
   center_matrix(D, M.rows());
-  auto Dmat = ArrayToMatrix(D, M.cols(), M.rows());
+  auto Dmat = ArrayToMatrix(D, M.rows(), M.rows());
   MatrixXd X = GetEigenProjectedMatrix(Dmat, num_eigvals);
 
   std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;

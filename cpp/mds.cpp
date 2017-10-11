@@ -46,18 +46,6 @@ std::vector<double> MatrixToArray(const MatrixXd& mat) {
     @param M - the matrix to generate the centering matrix from
     @return - the centering matrix for M
 */
-// MatrixXd get_centering_matrix(const MatrixXd& M) {
-//     Timer tmr;
-//     assert(M.rows() == M.cols());
-//     int n                = M.rows();
-//     MatrixXd identity    = MatrixXd::Identity(n, n);
-//     MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
-//     MatrixXd J           = identity - one_over_ns;
-//     MatrixXd result      = (-1.0 / 2.0) * J * M * J;
-//
-//     std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
-//     return result;
-// 
 void center_matrix(std::vector<double> &M, const int N) {
   Timer tmr;
 

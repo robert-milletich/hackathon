@@ -10,7 +10,7 @@
 using namespace Eigen;
 
 void PrintVector(std::string id, const std::vector<double> &a, const int width, const int height){
-  // return;
+  return;
 
   std::cout<<id<<std::endl;
   for(int y=0;y<height;y++){
@@ -130,8 +130,7 @@ std::vector<double> distance_gpu(const std::vector<double>& M, const int width, 
         // for(int row2 = row1 + 1; row2 < height; row2++){
         for(int row2 = 0; row2 < height; row2++){
             double temp_sum = 0;
-            // #pragma acc loop reduction(+:temp_sum)
-            #pragma acc loop seq
+            #pragma acc loop reduction(+:temp_sum)
             for(int i = 0; i < width; i++){
                 const double temp = data[row1 * width + i] - data[row2 * width + i];
                 temp_sum += temp * temp;
@@ -202,8 +201,8 @@ int main(int argc, char **argv){
   // distance1(Test_Matrix);
   ret.emplace_back("simple_distance", simple_distance(M, width, height));
   //distance3(Test_Matrix, i);
-  ret.emplace_back("distance5", distance5(M, width, height, 500));
-  ret.emplace_back("distance6", distance6(M, width, height, 100));
+  // ret.emplace_back("distance5", distance5(M, width, height, 500));
+  // ret.emplace_back("distance6", distance6(M, width, height, 100));
   ret.emplace_back("distance_gpu", distance_gpu(M, width, height));
 
   for(const auto &i: ret)

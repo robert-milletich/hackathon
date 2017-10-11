@@ -20,9 +20,9 @@ MatrixXd get_distance_squared_matrix(const std::vector<double>&, const int, cons
 
 typedef std::multimap<double, VectorXd, std::greater<double> > eigen_multimap;
 
-eigen_multimap get_eigen_map(const MatrixXd&, int);
+eigen_multimap GetKLargestEigenvalues(const MatrixXd&, int);
 
-MatrixXd get_x_matrix(const MatrixXd&, int);
+MatrixXd GetEigenProjectedMatrix(const MatrixXd&, int);
 
 MatrixXd mds(const MatrixXd&, int);
 

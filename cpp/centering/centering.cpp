@@ -89,8 +89,8 @@ void center_matrix(std::vector<double> &M, const int N) {
   // OpenACC kernels
   #pragma acc kernels copy(mvec[0:N*N])
   {
-    for(int x=0;x<N;x++) row[i] = 0;
-    for(int y=0;y<N;y++) col[i] = 0;
+    for(int x=0;x<N;x++) row[x] = 0;
+    for(int y=0;y<N;y++) col[y] = 0;
 
     // Row sums
     #pragma acc loop collapse(2) independent
@@ -107,7 +107,7 @@ void center_matrix(std::vector<double> &M, const int N) {
       for (int x = 0; x < N; x++) {
         colsum += mvec[y*N + x];
       }
-      col[j] = colsum;
+      col[y] = colsum;
     }
 
     // Sum of all elements

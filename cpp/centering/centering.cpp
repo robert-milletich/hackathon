@@ -81,29 +81,25 @@ void center_matrix(std::vector<double> &M, const int N) {
   Timer tmr;
 
   // Define 
-  double *const mvec  = M.data();
-  double *const row   = new double[N];
-  double *const col   = new double[N];
+  double *mvec  = M.data();
+  std::vector<double> rowvec(N);
+  std::vector<double> colvec(N);
+  double *row   = rowvec.data();
+  double *col   = colvec.data();
   double matrix_accum = 0;
 
   // OpenACC kernels
-  #pragma acc kernels copy(mvec[0:N*N])
+  #pragma acc kernels copy(mvec[0:N*N]) create(row[0:N], col[0:N])
   {
     for(int x=0;x<N;x++) row[x] = 0;
     for(int y=0;y<N;y++) col[y] = 0;
 
-    // Row sums
-    #pragma acc loop collapse(2) independent
-    for (int y = 0; y < N; y++) {
-      for (int x = 0; x < N; x++) {
-        row[x] += mvec[y*N + x];
-      }
-    }
-
-    // Column sums
+    //Column sums. Because the matrix is symmetric, we can use these as row sums
+    //as well.
     #pragma acc loop independent
     for (int y = 0; y < N; y++) {
       double colsum = 0;
+      #pragma acc loop reduction(+:colsum)
       for (int x = 0; x < N; x++) {
         colsum += mvec[y*N + x];
       }
@@ -111,7 +107,8 @@ void center_matrix(std::vector<double> &M, const int N) {
     }
 
     // Sum of all elements
-    #pragma acc loop reduction(+:matrix_accum)
+    //#pragma acc loop reduction(+:matrix_accum)
+    //#pragma acc loop seq
     for (int i = 0; i < N*N; i++) {
       matrix_accum += mvec[i];
     }
@@ -127,18 +124,13 @@ void center_matrix(std::vector<double> &M, const int N) {
     #pragma acc loop collapse(2) independent
     for(int y = 0; y < N; y++) {
       for (int x = 0; x < N; x++) {
-        mvec[y*N + x] += (matrix_accum - (row[x] + col[y]));
+        mvec[y*N + x] += (matrix_accum - (col[x] + col[y]));
       }
     }
 
     for(int i = 0; i < N * N; i++)
-      M[i] *= -0.5;  
+      mvec[i] *= -0.5;  
   }
-
-
-
-  delete row;
-  delete col;
 
   std::cerr << N << " center_matrix run time = " << std::fixed << std::setprecision(10) << tmr.elapsed() << " s" << std::endl;
 }
@@ -197,8 +189,16 @@ int main(int argc, char **argv){
 
     std::vector<double> test_matrix(N*N);
 
-    for (int i = 0; i < N * N; i++)
-      test_matrix[i] = rand() / (double) RAND_MAX;
+    //Create a symmetric matrix
+    for(int y=0;y<N;y++)
+    for(int x=0;x<N;x++){
+      test_matrix[y*N+x] = rand() / (double) RAND_MAX;
+      test_matrix[x*N+y] = test_matrix[y*N+x];
+    }
+
+    //Zero the diagonal
+    for(int d=0;d<N;d++)
+      test_matrix[d*N+d] = 0;
 
 
     PrintVector("Original data", test_matrix, N);

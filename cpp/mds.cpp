@@ -4,6 +4,8 @@
 #include "mds.h"
 #include "Timer.hpp"
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Dense>
 #include <spectra/SymEigsSolver.h> 
 #include <stdexcept>
 #include <map>
@@ -123,13 +125,20 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
 topeigs_t GetTopEigenValues(const MatrixXd &mat, const int num_eigvals){
   assert(mat.rows()==mat.cols());
 
+  std::cout<<"GetTopEigenValues (it is square) rows = "<<mat.rows()<<std::endl;
+
+  const int CONVERGENCE_PARAM = 6;
+
   Timer tmr;
 
   // Construct matrix operation object using the wrapper clagss DenseGenMatProd
   Spectra::DenseSymMatProd<double> op(mat);
 
+  //Rule of thumb from Spectra docs
+  assert(2*num_eigvals<=CONVERGENCE_PARAM);
+
   // Eigensolver
-  Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 6);
+  Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, num_eigvals, CONVERGENCE_PARAM);
 
   // Initialize and compute
   eigs.init();
@@ -154,12 +163,11 @@ topeigs_t GetTopEigenValues(const MatrixXd &mat, const int num_eigvals){
     eigenvalues, and Lambda_m_srt - the m X m diagonal matrix with entries
     corresponding to square roots of the m largest eigenvalues)
 
-    @param M - the matrix to generate the X matrix for
     @param m - the value of m for E_m and Lambda_m_sqrt
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
 
-MatrixXd GetEigenProjectedMatrix(const topeigs_t &topeigs, const MatrixXd& M) {
+MatrixXd GetEigenProjectedMatrix(const topeigs_t &topeigs) {
   Timer tmr;
 
   const int num_eigvals = topeigs.first.size();
@@ -202,7 +210,7 @@ MatrixXd mds(const MatrixXd& M, int num_eigvals) {
   center_matrix(D, M.rows());
   const auto Dmat    = ArrayToMatrix(D, M.rows(), M.rows());
   const auto topeigs = GetTopEigenValues(Dmat, num_eigvals);
-  const auto X       = GetEigenProjectedMatrix(topeigs, Dmat);
+  const auto X       = GetEigenProjectedMatrix(topeigs);
 
   std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
   return X;
@@ -214,7 +222,7 @@ TEST_CASE("mvec display"){
   const int height = 5;
   const int width  = 10;
 
-  MatrixXd mat(height,width);
+  Eigen::MatrixXd mat(height,width);
   for(int i=0;i<height*width;i++)
     mat(i) = rand()/(double)RAND_MAX;
 
@@ -232,14 +240,14 @@ TEST_CASE("Distance"){
   const int height = 100;
   const int width  = 5;
 
-  MatrixXd mat(height,width);
+  Eigen::MatrixXd mat(height,width);
   for(int i=0;i<height*width;i++)
     mat(i) = rand()/(double)RAND_MAX;
 
   const auto vec     = MatrixToArray(mat);
   const auto distvec = get_distance_squared_matrix(vec,width,height);
 
-  MatrixXd result = MatrixXd(height,height);
+  Eigen::MatrixXd result(height,height);
   for (int i = 0; i < mat.rows(); i++)
   for (int j = 0; j < mat.rows(); j++) {
     // since distance matrices are symmetric and 0 on the diagonal,
@@ -262,7 +270,7 @@ TEST_CASE("Distance"){
 TEST_CASE("Centering"){
   const int N = 100;
 
-  MatrixXd mat(N, N);
+  Eigen::MatrixXd mat(N, N);
   for(int i=0; i<N; i++){
     for(int j=i+1; j<N; j++){
       mat(i, j) = mat(j, i) = rand()/(double)RAND_MAX;
@@ -270,9 +278,9 @@ TEST_CASE("Centering"){
   }
 
   // Centering using eigen
-  MatrixXd identity    = MatrixXd::Identity(N, N);
-  MatrixXd one_over_ns = MatrixXd::Constant(N, N, 1.0 / N);
-  MatrixXd J           = identity - one_over_ns;
+  Eigen::MatrixXd identity    = Eigen::MatrixXd::Identity(N, N);
+  Eigen::MatrixXd one_over_ns = Eigen::MatrixXd::Constant(N, N, 1.0 / N);
+  Eigen::MatrixXd J           = identity - one_over_ns;
   auto eigen_res       = (-1.0 / 2.0) * J * mat * J;
 
   // Centering using flattened array
@@ -290,7 +298,7 @@ TEST_CASE("Centering"){
 TEST_CASE("Top k eigenvalues"){
   // Create symmetric test data
   const int N = 100;
-  MatrixXd mat(N, N);
+  Eigen::MatrixXd mat(N, N);
   for(int i=0; i<N; i++){
     for(int j=i+1; j<N; j++){
       mat(i, j) = mat(j, i) = rand()/(double)RAND_MAX;
@@ -299,10 +307,10 @@ TEST_CASE("Top k eigenvalues"){
   const int n_eign = 3;
 
   //Eigen
-  SelfAdjointEigenSolver<MatrixXd> eigen_solver(N);
+  Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigen_solver(N);
   eigen_solver.compute(mat);
   VectorXd eigenvalues  = eigen_solver.eigenvalues();
-  MatrixXd eigenvectors = eigen_solver.eigenvectors();
+  Eigen::MatrixXd eigenvectors = eigen_solver.eigenvectors();
   typedef std::pair<double,VectorXd> eig_vec_pair;
   std::vector< eig_vec_pair > eig_vecs;
   for(int i=0;i<eigenvalues.size();i++)

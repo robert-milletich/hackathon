@@ -1,6 +1,8 @@
 #include "mds.h"
 #include "fast_mds.h"
 
+#include <iostream>
+
 
 /**
     Return a std::vector containing a permutation of the integers in [0, n-1]
@@ -335,20 +337,35 @@ std::vector<MatrixXd> get_xi_mapped_matrices(const MatrixXd& M, int p, int q, in
     @result - the matrix obtained by performing FastMDS on the matrix M with the
     parameters p, q, m
 */
-MatrixXd fast_mds(const MatrixXd& M, int p, int q, int m) {
-    std::vector<MatrixXd> xi_mapped_matrices = get_xi_mapped_matrices(M, p, q, m);
+MatrixXd fast_mds(
+  const MatrixXd& M, 
+  const int rows_per_partition,
+  const int rows_to_sample, 
+  const int desired_dims
+){
+    std::cout<<"FastMDS"<<std::endl;
+    std::cout<<"rows_per_partition = "  <<rows_per_partition<<std::endl; 
+    std::cout<<"rows_to_sample     = "  <<rows_to_sample    <<std::endl; 
+    std::cout<<"desired_dims       = "  <<desired_dims      <<std::endl; 
 
-    int M_rows = M.rows();
-    int cols = m + 1;
-    int num_submatrices = xi_mapped_matrices.size();
+    std::vector<MatrixXd> xi_mapped_matrices = get_xi_mapped_matrices(M, rows_per_partition, rows_to_sample, desired_dims);
+
+    const int M_rows          = M.rows();
+    const int cols            = desired_dims + 1;
+    const int num_submatrices = xi_mapped_matrices.size();
 
     MatrixXd result = MatrixXd(M_rows, cols);
 
     for (int i = 0; i < num_submatrices - 1; i++) {
-        result.block(i * p, 0, p, cols) = xi_mapped_matrices[i];
+        result.block(i * rows_per_partition, 0, rows_per_partition, cols) = xi_mapped_matrices[i];
     }
 
-    result.block((num_submatrices - 1) * p, 0, p + M_rows % p, cols) = xi_mapped_matrices[num_submatrices - 1];
+    result.block(
+        (num_submatrices - 1) * rows_per_partition, 
+        0, 
+        rows_per_partition + M_rows % rows_per_partition, 
+        cols
+    ) = xi_mapped_matrices[num_submatrices - 1];
 
     return result.block(0, 1, M_rows, cols - 1);
 }

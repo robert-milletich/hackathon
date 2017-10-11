@@ -46,13 +46,9 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    // m (the desired dimensionality) and q (the sample size to use from each
-    // partition) are set to 3, 5, respectively
-    int m = 3;
-    int q = m + 2;
-    // p (the partition size) is set to the max of q + 1 and (num_rows / 10)
-    // rounded down
-    int p = std::max(q + 1, (int)floor(rows / 10));
+    const int desired_dim    = 3;                //Desired dimensionality
+    const int rows_to_sample = desired_dim + 2;  //Sample size to use from each partition
+    const int partition_size = std::max(rows_to_sample + 1, rows / 100);
 
     std::string infile(in);
     std::string outfile(out);
@@ -60,8 +56,8 @@ int main(int argc, char** argv) {
     // read in the matrix from infile
     MatrixXd M = read_matrix(infile, rows, cols);
 
-    // perform FastMDS on the read-in matrix with p, q, m as above
-    MatrixXd result = fast_mds(M, p, q, m);
+    // perform FastMDS on the read-in matrix with partition_size, q, m as above
+    MatrixXd result = fast_mds(M, partition_size, rows_to_sample, desired_dim);
 
     // write out the result to outfile
     write_matrix(result, outfile);

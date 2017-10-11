@@ -16,6 +16,8 @@ void center_matrix(MatrixXd& M);
 
 MatrixXd get_distance_squared_matrix(const MatrixXd&);
 
+MatrixXd get_distance_squared_matrix(const std::vector<double>&, const int, const int);
+
 typedef std::multimap<double, VectorXd, std::greater<double> > eigen_multimap;
 
 eigen_multimap get_eigen_map(const MatrixXd&, int);

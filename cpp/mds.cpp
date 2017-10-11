@@ -61,32 +61,7 @@ void center_matrix(MatrixXd& M) {
         }
     }
 
-    std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
-}
-
-
-
-
-/**
-    Returns the distance squared matrix for the matrix M, where the
-    distance is the Euclidean distance
-
-    @param M - the matrix to compute the distance squared matrix for
-    @return - the distance squared matrix for M
-*/
-MatrixXd get_distance_squared_matrix(const MatrixXd& M) {
-    int n = M.rows();
-    MatrixXd result = MatrixXd(n, n);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            // since distance matrices are symmetric and 0 on the diagonal,
-            // redundant computations could be avoided by setting
-            //  result(i, i) = 0, and result(i, j) = result(j, i) when i > j
-            result(i, j) = (M.row(i) - M.row(j)).squaredNorm();
-        }
-    }
-    return result;
+    std::cerr << N << " centering run time = " << tmr.elapsed() << " s" << std::endl;
 }
 
 TEST_CASE("Centering matrix"){
@@ -107,6 +82,77 @@ TEST_CASE("Centering matrix"){
     MatrixXd result      = (-1.0 / 2.0) * J * Test_Matrix_Copy * J;
 
     CHECK((Test_Matrix - result).sum() == doctest::Approx(0));
+}
+
+
+/**
+    Returns the distance squared matrix for the matrix M, where the
+    distance is the Euclidean distance
+
+    @param M - the matrix to compute the distance squared matrix for
+    @return - the distance squared matrix for M
+*/
+// MatrixXd get_distance_squared_matrix(const MatrixXd& M) {
+//     Timer tmr;
+//
+//     const int BLOCK_SIZE = 100;
+//     const int N = M.rows();
+//     MatrixXd result(N, N);
+//
+//     for(int i = 0; i < N * N; i++)
+//         result(i) = 0;
+
+    // for(int row1 = 0;        row1 < N; row1++)
+    // for(int row2 = row1 + 1; row2 < N; row2++){
+    //     double temp_sum = 0;
+    //     for(int i = 0; i < N; i++){
+    //         const double temp = M(i, row1) - M(i, row2);
+    //         temp_sum += temp * temp;
+    //     }
+    //     result(row1, row2) = temp_sum;
+    //     result(row2, row1) = temp_sum;
+    // }
+
+//     for(int row1 = 0;        row1 < N; row1 += BLOCK_SIZE) {
+//         for(int r1b  = 0; r1b < std::min(N, row1 + BLOCK_SIZE); r1b++) {
+//             for(int row2 = r1b + 1; row2 < N; row2++){
+//                 double temp_sum = 0;
+//                 for(int i = 0; i < N; i++){
+//                     const double temp = M(i, r1b) - M(i, row2);
+//                     temp_sum += temp * temp;
+//                 }
+//                 result(r1b, row2) = temp_sum;
+//                 result(row2, r1b) = temp_sum;
+//             }
+//         }
+//     }
+//
+//     std::cerr << N << " distance run time = " << tmr.elapsed() << " s" << std::endl;
+//     return result;
+// }
+MatrixXd get_distance_squared_matrix(const std::vector<double> &M, const int width, const int height) {
+    Timer tmr;
+
+    std::vector<double> result(height*height, 0);
+
+    for(int row1 = 0; row1 < height; row1++) {
+        for(int row2 = row1 + 1; row2 < height; row2++){
+            double temp_sum = 0;
+            for(int i = 0; i < width; i++){
+                const double temp = M[row1*width+i] - M[row2*width+i];
+                temp_sum += temp * temp;
+            }
+            result[row1*width+row2] = temp_sum;
+            result[row2*width+row1] = temp_sum;
+        }
+    }
+
+    Eigen::MatrixXd eigres(height,height);
+    for(int i=0;i<height*height;i++)
+        eigres(i) = result[i];
+
+    std::cerr << height << " distance run time = " << tmr.elapsed() << " s" << std::endl;
+    return eigres;
 }
 
 
@@ -194,9 +240,30 @@ MatrixXd get_x_matrix(const MatrixXd& M, int m) {
 //     return X;
 // }
 
+// MatrixXd mds(const MatrixXd& M, int m) {
+//     Timer tmr;
+//     MatrixXd D = get_distance_squared_matrix(M);
+//     center_matrix(D);
+//     MatrixXd X = get_x_matrix(D, m);
+//
+//     std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;
+//     return X;
+// }
+
 MatrixXd mds(const MatrixXd& M, int m) {
     Timer tmr;
-    MatrixXd D = get_distance_squared_matrix(M);
+
+    const int WIDTH = M.cols();
+    const int HEIGHT = M.rows();
+    std::vector<double> M_Data(WIDTH * HEIGHT, 0.0);
+
+    for (int j = 0; j < HEIGHT; j++) {
+        for (int i = 0; i < WIDTH; i++) {
+            M_Data[WIDTH * i + HEIGHT] = M(i, j);
+        }
+    }
+
+    MatrixXd D = get_distance_squared_matrix(M_Data, WIDTH, HEIGHT);
     center_matrix(D);
     MatrixXd X = get_x_matrix(D, m);
 

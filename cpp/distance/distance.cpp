@@ -25,20 +25,20 @@ void PrintTimings(const std::string id, const int width, const int height, const
   std::cerr<<"id="<<std::setw(25)<<id<<" width="<<width<<" height="<<height<<" time="<<time<<std::endl;
 }
 
-MatrixXd distance_eigen_square(const MatrixXd& M, const int width, const int height) {
+MatrixXd distance_eigen_square(const MatrixXd& M) {
   Timer tmr;
 
-  MatrixXd result = MatrixXd(height, height);
+  MatrixXd result = MatrixXd(M.rows(), M.rows());
 
-  for (int i = 0; i < width; i++)
-  for (int j = 0; j < width; j++) {
+  for (int i = 0; i < M.rows(); i++)
+  for (int j = 0; j < M.rows(); j++) {
     // since distance matrices are symmetric and 0 on the diagonal,
     // redundant computations could be avoided by setting
     //  result(i, i) = 0, and result(i, j) = result(j, i) when i > j
     result(i, j) = (M.row(i) - M.row(j)).squaredNorm();
   }
 
-  PrintTimings("distance_eigen_square", width, height, tmr.elapsed());
+  PrintTimings("distance_eigen_square", M.rows(), M.rows(), tmr.elapsed());
 
   return result;
 }
@@ -154,7 +154,7 @@ std::vector<double> EigenTest(T func, std::vector<double> a, const int width, co
   // std::cout<<"Pre test matrix"<<std::endl;
   // std::cout<<mat<<std::endl;
 
-  mat = func(mat, width, height);
+  mat = func(mat);
 
   for(int y=0;y<height;y++)
   for(int x=0;x<width;x++)

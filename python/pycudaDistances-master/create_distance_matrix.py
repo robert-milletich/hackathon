@@ -20,7 +20,7 @@ def pairwise_python(X):
             for k in range(N):
                 tmp = X[i, k] - X[j, k]
                 d += tmp * tmp
-            D[i, j] = d
+            D[i, j] = np.sqrt(d)
     return D
 
 #def pairwise_cuda(x):

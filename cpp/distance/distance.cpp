@@ -124,7 +124,7 @@ std::vector<double> EigenTest(T func, std::vector<double> a, const int width, co
 
 double MatDiff(const std::vector<double> &a, const std::vector<double> &b){
   double diff = 0;
-  for(int i=0;i<a.size();i++)
+  for(unsigned int i=0;i<a.size();i++)
     diff += std::abs(a[i] - b[i]);
   return diff;
 }
@@ -156,8 +156,8 @@ int main(int argc, char **argv){
   for(const auto &i: ret)
     PrintVector(i.first, i.second, height, height);
 
-  for(int i=0;i<ret.size();i++)
-  for(int j=i+1;j<ret.size();j++){
+  for(unsigned int i=0;i<ret.size();i++)
+  for(unsigned int j=i+1;j<ret.size();j++){
     std::cerr<<"Diff between" << " "
              <<std::setw(25)<<ret.at(i).first   << " "
              <<std::setw(25)<<ret.at(j).first   << " = "

@@ -10,9 +10,13 @@ from scipy import linalg as LA
 import scipy.sparse.linalg as SP
 import time
 import sys
-import sklearn
 from numba import cuda
 import time
+
+
+MAX_MDS = 8500
+MAX_MDS_2 = 7000
+DIMENSIONS = 3
 
 #sk_mds = sklearn.manifold.MDS
 timer = 0
@@ -42,7 +46,7 @@ def gpu_dist_matrix(mat):
     rows = mat.shape[0]
     
     block_dim = (16, 16)
-    grid_dim = (rows/block_dim[0] + 1, rows/block_dim[1] + 1)
+    grid_dim = (int(rows/block_dim[0] + 1), int(rows/block_dim[1] + 1))
     
     stream = cuda.stream()
     mat2 = cuda.to_device(np.asarray(mat, dtype=np_type), stream=stream)
@@ -52,9 +56,6 @@ def gpu_dist_matrix(mat):
     
     return out
 
-MAX_MDS = 8500
-MAX_MDS_2 = 6000
-DIMENSIONS = 3
 
 class MDSError(Exception):
     pass
@@ -72,10 +73,8 @@ def mds(input_matrix):
 #    d_mat = spatial.distance.cdist(mat, mat)
 #    d_sq = d_mat * d_mat 
     d_sq = gpu_dist_matrix(mat)
-    start = time.time()
-    j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
-    b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
-    timer += time.time() - start
+    d_s = (-1./2.)*d_sq
+    b_ = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
     
 #     Attempt 1 of eig
     eig_vals, eig_vecs = SP.eigsh(b_, k=DIMENSIONS)
@@ -356,8 +355,8 @@ def find_strain(matrix1, matrix2):
     return np.sqrt(strain_sq)
 
 # For testing the function
-rows = 30000
-dims = 10
+rows = 50000
+dims = 100
 #assert rows * dims < MAX_MDS * MAX_MDS
 foo = np.random.rand(rows, dims)
 print("done creating")

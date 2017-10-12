@@ -2,6 +2,7 @@
 #include "fast_mds.h"
 #include "random.hpp"
 
+#include <iostream>
 #include <random>
 
 
@@ -212,10 +213,10 @@ vector_of_matrix_pairs get_ai_xi_sample_matrices(const MatrixXd& M, int p, int q
 std::vector<MatrixXd> get_xi_matrices(const MatrixXd& M, int p, int m) {
     std::vector<MatrixXd> partition = partition_matrix(M, p);
 
-    std::vector<MatrixXd> result;
-
-    for (std::vector<MatrixXd>::iterator it = partition.begin(); it != partition.end(); it++) {
-        result.push_back(mds(*it, m));
+    std::vector<MatrixXd> result(partition.size());
+    #pragma omp parallel for
+    for (unsigned int i = 0; i < partition.size(); i++) {
+        result.at(i) = mds(partition.at(i), m);
     }
 
     return result;

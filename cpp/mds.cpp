@@ -4,7 +4,7 @@
 #include "mds.h"
 #include "Timer.hpp"
 #include <Eigen/Core>
-#include <spectra/SymEigsSolver.h> 
+#include <vector>
 #include <stdexcept>
 #include <map>
 #include "doctest.h"
@@ -46,18 +46,6 @@ std::vector<double> MatrixToArray(const MatrixXd& mat) {
     @param M - the matrix to generate the centering matrix from
     @return - the centering matrix for M
 */
-// MatrixXd get_centering_matrix(const MatrixXd& M) {
-//     Timer tmr;
-//     assert(M.rows() == M.cols());
-//     int n                = M.rows();
-//     MatrixXd identity    = MatrixXd::Identity(n, n);
-//     MatrixXd one_over_ns = MatrixXd::Constant(n, n, 1.0 / n);
-//     MatrixXd J           = identity - one_over_ns;
-//     MatrixXd result      = (-1.0 / 2.0) * J * M * J;
-//
-//     std::cerr << "centering run time = " << tmr.elapsed() << " s" << std::endl;
-//     return result;
-// 
 void center_matrix(std::vector<double> &M, const int N) {
   Timer tmr;
 
@@ -114,8 +102,40 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
     result[row1*height+row2] = temp_sum;
     result[row2*height+row1] = temp_sum;
   }
-    std::cerr << "distance matrix run time = " << tmr.elapsed() << " s" << std::endl;
+  std::cerr << "distance matrix run time = " << tmr.elapsed() << " s" << std::endl;
 
+  return result;
+}
+
+/**
+    Returns a multimap (i.e., keys need not be unique) with key, value pairs
+    corresponding to the m largest eigenvalues of the matrix M and their
+    respective eigenvectors
+
+    @param M - the matrix to compute the eigenvalues/eigenvectors for
+    @param m - the number of largest eigenvalues/eigenvectors to populate the
+    multimap with
+    @return - the multimap containing the eigenvalue, eigenvector key, value
+    pairs for the m largest eigenvalues of the matrix M
+*/
+eigen_multimap get_eigen_map(const MatrixXd& M, int m)  {
+  assert(M.cols()==M.rows());
+  int n = M.rows();
+  assert(m <= n);
+  SelfAdjointEigenSolver<MatrixXd> eigen_solver(n);
+  eigen_solver.compute(M);
+  VectorXd eigenvalues = eigen_solver.eigenvalues();
+  MatrixXd eigenvectors = eigen_solver.eigenvectors();
+
+  eigen_multimap eigen_map;
+  for (int i = 0; i < eigenvalues.size(); i++) {
+      eigen_map.insert(std::make_pair(eigenvalues(i), eigenvectors.col(i)));
+  }
+  eigen_multimap result;
+
+  for (eigen_multimap::iterator it = eigen_map.begin(); it != std::next(eigen_map.begin(), m); it++) {
+      result.insert(std::make_pair((*it).first, (*it).second));
+  }
   return result;
 }
 
@@ -131,36 +151,27 @@ std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, co
     @param m - the value of m for E_m and Lambda_m_sqrt
     @return - the matrix X = E_m * Lambda_m_sqrt
 */
-
 MatrixXd GetEigenProjectedMatrix(const MatrixXd& M, int num_eigvals) {
-    Timer tmr;
+  assert(M.cols()==M.rows());
+  Timer tmr;
 
-    // Construct matrix operation object using the wrapper class DenseGenMatProd
-    Spectra::DenseSymMatProd<double> op(M);
+  eigen_multimap eigen_map = get_eigen_map(M, num_eigvals);
+  int n = M.rows();
+  // E_m - the (n X m) matrix of m eigenvectors corresponding to the m largest eigenvalues
+  MatrixXd E_m = MatrixXd(n , num_eigvals);
+  // Lambda_m_srt - the (m X m) diagonal matrix with entries corresponding to square roots
+  // of the m largest eigenvalues
+  MatrixXd Lambda_m_sqrt = MatrixXd::Constant(num_eigvals, num_eigvals, 0.0);
 
-    // Eigensolver
-    Spectra::SymEigsSolver< double, Spectra::LARGEST_ALGE, Spectra::DenseSymMatProd<double> > eigs(&op, 3, 6);
+  int index = 0;
+  for (eigen_multimap::iterator it = eigen_map.begin(); it != eigen_map.end(); it++) {
+      E_m.col(index) = (*it).second;
+      Lambda_m_sqrt(index, index) = sqrt((*it).first);
+      index++;
+  }
 
-    // Initialize and compute
-    eigs.init();
-    eigs.compute();
-
-    // Retrieve results
-    if(eigs.info() != Spectra::SUCCESSFUL)
-        throw std::runtime_error("Sorry about your luck.");
-
-    const auto evalues = eigs.eigenvalues();
-    const auto E_m     = eigs.eigenvectors();
-
-    // Lambda_m_srt - the (m X m) diagonal matrix with entries corresponding to square roots
-    // of the m largest eigenvalues
-    MatrixXd Lambda_m_sqrt = MatrixXd::Constant(num_eigvals, num_eigvals, 0.0);
-    for (int i=0; i<num_eigvals; i++){
-        Lambda_m_sqrt(i, i) = sqrt(evalues(i));
-    }
-
-    std::cerr << "get x run time = " << tmr.elapsed() << " s" << std::endl;
-    return E_m * Lambda_m_sqrt;
+  std::cerr << "get x run time = " << tmr.elapsed() << " s" << std::endl;
+  return E_m * Lambda_m_sqrt;
 }
 
 
@@ -188,7 +199,7 @@ MatrixXd mds(const MatrixXd& M, int num_eigvals) {
   auto mvec = MatrixToArray(M);
   auto D = get_distance_squared_matrix(mvec, M.cols(), M.rows());
   center_matrix(D, M.rows());
-  auto Dmat = ArrayToMatrix(D, M.cols(), M.rows());
+  auto Dmat = ArrayToMatrix(D, M.rows(), M.rows());
   MatrixXd X = GetEigenProjectedMatrix(Dmat, num_eigvals);
 
   std::cerr << "mds run time = " << tmr.elapsed() << " s\n" << std::endl;

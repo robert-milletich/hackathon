@@ -1,5 +1,5 @@
 CC = g++
-CC_FLAGS = -g -O3 -std=c++11 -isystem . -DDOCTEST_CONFIG_DISABLE -Wall -Wextra -DEIGEN_DONT_PARALLELIZE
+CC_FLAGS = -g -O3 -std=c++11 -isystem . -DDOCTEST_CONFIG_DISABLE -Wall -Wextra -DEIGEN_DONT_PARALLELIZE -march=native -mtune=native
 
 EXEC = main.exe
 SOURCES = $(wildcard *.cpp)

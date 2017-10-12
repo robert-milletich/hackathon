@@ -1,7 +1,8 @@
 #include "mds.h"
 #include "fast_mds.h"
+#include "random.hpp"
 
-#include <iostream>
+#include <random>
 
 
 /**
@@ -17,9 +18,7 @@ std::vector<int> get_permuted_range(int n) {
         indices.push_back(i);
     }
 
-    std::random_device random_device;
-    std::mt19937 generator(random_device());
-    std::shuffle (indices.begin(), indices.end(), generator);
+    std::shuffle (indices.begin(), indices.end(), rand_engine());
 
     return indices;
 }

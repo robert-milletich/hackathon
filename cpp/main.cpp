@@ -9,6 +9,7 @@
 #include "mds.h"
 #include "fast_mds.h"
 #include "utils.h"
+#include "random.hpp"
 
 #ifdef DOCTEST_CONFIG_DISABLE
 
@@ -63,6 +64,9 @@ int main(int argc, char** argv) {
     std::cout<<"Syntax: "<<argv[0]<<" <Input File> <Output File>"<<std::endl;
     return -1;
   }
+
+  // seed_rand(0);
+  seed_rand(31);
 
   std::string infile (argv[1]);
   std::string outfile(argv[2]);

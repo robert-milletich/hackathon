@@ -2,8 +2,7 @@
 
 import argparse
 import csv
-from random import randint
-import numpy as np
+import random
 
 
 parser = argparse.ArgumentParser()
@@ -46,7 +45,7 @@ def write_data_file(filename, rows, cols, lowest_value, highest_value):
         csv_writer = csv.writer(fout, delimiter=' ')
         for row in range(0, rows):
             csv_writer.writerow(
-                [randint(lowest_value, highest_value) for _ in range(cols)]
+                [random.uniform(lowest_value, highest_value) for _ in range(cols)]
                 )
 
 

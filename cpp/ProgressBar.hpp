@@ -55,13 +55,13 @@ class ProgressBar{
   public:
     ///@brief Start/reset the progress bar.
     ///@param total_work  The amount of work to be completed, usually specified in cells.
-    void start(uint32_t total_work){
-      timer = Timer();
-      this->total_work = total_work;
-      next_update      = 0;
-      call_diff        = total_work/200;
-      old_percent      = 0;
-      work_done        = 0;
+    void start(uint32_t total_work0){
+      timer       = Timer();
+      total_work  = total_work0;
+      next_update = 0;
+      call_diff   = total_work/200;
+      old_percent = 0;
+      work_done   = 0;
       clearConsoleLine();
     }
 

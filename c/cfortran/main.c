@@ -9,7 +9,7 @@ extern void ssaupd_(int *ido, char *bmat, int *n, char *which,
 
 int main(){
 
-    double mat[] = { 1.0, 0.8, 0.7,
+    double bmat[] = { 1.0, 0.8, 0.7,
                      0.8, 1.0, 0.6,
                      0.7, 0.6, 1.0 };
     int maxiter = 30;

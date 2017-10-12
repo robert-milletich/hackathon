@@ -8,10 +8,12 @@ class Timer {
   typedef std::chrono::high_resolution_clock clock;
   typedef std::chrono::duration<double, std::ratio<1> > second;
   std::chrono::time_point<clock> start_time;
+  std::chrono::time_point<clock> old_time;
  public:
   Timer();
-  void reset();
+  void   reset  ();
   double elapsed() const;
+  double lap    ();
 };
 
 #endif

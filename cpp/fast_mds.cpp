@@ -1,5 +1,6 @@
 #include "mds.h"
 #include "fast_mds.h"
+#include "ProgressBar.hpp"
 
 #include <iostream>
 
@@ -164,12 +165,18 @@ vector_of_matrix_pairs get_ai_xi_matrices(const MatrixXd& M, int p, int m) {
 
     vector_of_matrix_pairs result(partition.size());
 
+    ProgressBar pg;
+    pg.start(partition.size());
+
     #pragma omp parallel for
     for(unsigned int i=0;i<partition.size();i++){
+        pg.update(i);
         const auto &thismat = partition.at(i);
         const auto ret = mds(thismat, m);
         result.at(i) = std::make_pair(thismat, ret);
     }
+
+    std::cerr<<"get_ai_xi_matrices time = " << pg.stop() << " s"<<std::endl;
 
     return result;
 }

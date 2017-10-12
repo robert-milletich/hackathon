@@ -17,25 +17,25 @@ typedef std::multimap<double, VectorXd, std::greater<double> > eigen_multimap;
 typedef std::pair<VectorXd, MatrixXd> topeigs_t;
 
 MatrixXd ArrayToMatrix(const std::vector<double> &array, const int width, const int height) {
-    MatrixXd matrix(height, width);
-    for(int y=0; y<height; y++){
-        for(int x=0; x<width; x++){
-            matrix(y, x) = array.at(y*width + x);
-        }
-    }
-    return matrix;
+  MatrixXd matrix(height, width);
+  
+  for(int y=0; y<height; y++)
+  for(int x=0; x<width; x++)
+    matrix(y, x) = array.at(y*width + x);
+
+  return matrix;
 }
 
 std::vector<double> MatrixToArray(const MatrixXd& mat) {
-    const auto height = mat.rows();
-    const auto width = mat.cols();
-    std::vector<double> flattened(height*width);
-    for(int y=0; y<height; y++){
-        for(int x=0; x<width; x++){
-            flattened.at(y*width + x) = mat(y, x);
-        }
-    }
-    return flattened;
+  const auto height = mat.rows();
+  const auto width = mat.cols();
+
+  std::vector<double> flattened(height*width);
+  for(int y=0; y<height; y++)
+  for(int x=0; x<width; x++)
+    flattened.at(y*width + x) = mat(y, x);
+
+  return flattened;
 }
 
 

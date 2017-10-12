@@ -82,7 +82,7 @@ double inline inner_distance1(const dvec &M, const int width, int row1, int row2
   for(int x = 0; x < width; x++){
     const double temp = M[row1*width+x]-M[row2*width+x];
     temp_sum += temp * temp;
-  }  
+  }
 
   return temp_sum;
 }
@@ -118,7 +118,7 @@ double inline inner_distance2(const dvec &M, const int width, int row1, int row2
   for(int x = 0; x < width; x++){
     const double temp = M[row1+x]-M[row2+x];
     temp_sum += temp * temp;
-  }  
+  }
 
   return temp_sum;
 }
@@ -160,7 +160,7 @@ double inline inner_distance3(const dvec &M, const int width, int row1, int row2
   for(int x = 0; x < width; x++, rdat1++, rdat2++){
     const double temp = *rdat1 - *rdat2;
     temp_sum += temp * temp;
-  }  
+  }
 
   return temp_sum;
 }
@@ -298,7 +298,7 @@ double inline inner_distance6(const dvec &M, const int width, int row1, int row2
   v2df_t reg2a;
   v2df_t reg2b;
 
-  regsum.v = _mm_setzero_pd(); 
+  regsum.v = _mm_setzero_pd();
 
   for(int x = 0; x < cleanwidth; x+=STEP, rdat1+=STEP, rdat2+=STEP){
     reg1a.v = _mm_loadu_pd( rdat1   );
@@ -355,7 +355,7 @@ dvec simple_distance7(const dvec &M, const int width, const int height) {
     for(int x = 0; x < width; x++){
       const double temp = M[row1*width+x]-M[row2*width+x];
       temp_sum += temp * temp;
-    }  
+    }
     result[row1*height+row2] = temp_sum;
     result[row2*height+row1] = temp_sum;
   }
@@ -385,8 +385,7 @@ dvec distance_gpu(const dvec& M, const int width, const int height) {
         // for(int row2 = row1 + 1; row2 < height; row2++){
         for(int row2 = 0; row2 < height; row2++){
             double temp_sum = 0;
-            // #pragma acc loop reduction(+:temp_sum)
-            #pragma acc loop seq
+            #pragma acc loop reduction(+:temp_sum)
             for(int i = 0; i < width; i++){
                 const double temp = data[row1 * width + i] - data[row2 * width + i];
                 temp_sum += temp * temp;
@@ -499,5 +498,3 @@ int main(int argc, char **argv){
   // for(int bs=1;bs<1000;bs+=5)
   //   distance6(M, width, height, bs);
 }
-
-

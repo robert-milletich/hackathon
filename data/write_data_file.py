@@ -41,8 +41,9 @@ parser.add_argument(
 
 
 def write_data_file(filename, rows, cols, lowest_value, highest_value):
-    with open(filename, 'w') as file:
-        csv_writer = csv.writer(file, delimiter=',')
+    with open(filename, 'w') as fout:
+        fout.write("{rows}\n{cols}\n".format(rows=rows,cols=cols))
+        csv_writer = csv.writer(fout, delimiter=' ')
         for row in range(0, rows):
             csv_writer.writerow(
                 [randint(lowest_value, highest_value) for _ in range(cols)]

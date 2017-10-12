@@ -161,6 +161,7 @@ MatrixXd get_intercept_matrix(const MatrixXd& M) {
     correspond to partitions ai of the matrix M and the associated xi matrices
 */
 vector_of_matrix_pairs get_ai_xi_matrices(const MatrixXd& M, int p, int m) {
+    std::cerr<<"Starting get_ai_xi_matrices..."<<std::endl;
     std::vector<MatrixXd> partition = partition_matrix(M, p);
 
     vector_of_matrix_pairs result(partition.size());
@@ -168,6 +169,7 @@ vector_of_matrix_pairs get_ai_xi_matrices(const MatrixXd& M, int p, int m) {
     ProgressBar pg;
     pg.start(partition.size());
 
+    std::cerr<<"Entering parallel region of get_ai_xi_matrices..."<<std::endl;
     #pragma omp parallel for
     for(unsigned int i=0;i<partition.size();i++){
         pg.update(i);
@@ -199,7 +201,7 @@ vector_of_matrix_pairs get_ai_xi_sample_matrices(const MatrixXd& M, int p, int q
 
     vector_of_matrix_pairs result;
 
-    for (int i = 0; i < ai_xi_matrices.size(); i++) {
+    for (unsigned int i = 0; i < ai_xi_matrices.size(); i++) {
         result.push_back(get_sample_matrices_from_pair(ai_xi_matrices[i], q));
     }
 
@@ -282,7 +284,7 @@ std::vector<MatrixXd> get_bi_matrices(const MatrixXd& M, int p, int q, int m) {
     std::vector<MatrixXd> ai_sample_matrices;
     std::vector<MatrixXd> xi_sample_matrices;
     //
-    for (int i = 0; i < ai_xi_sample_matrices.size(); i++) {
+    for (unsigned int i = 0; i < ai_xi_sample_matrices.size(); i++) {
         ai_sample_matrices.push_back(ai_xi_sample_matrices[i].first);
         xi_sample_matrices.push_back(ai_xi_sample_matrices[i].second);
     }
@@ -291,7 +293,7 @@ std::vector<MatrixXd> get_bi_matrices(const MatrixXd& M, int p, int q, int m) {
 
     std::vector<MatrixXd> bi_matrices;
 
-    for (int i = 0; i < ai_xi_sample_matrices.size(); i++) {
+    for (unsigned int i = 0; i < ai_xi_sample_matrices.size(); i++) {
         MatrixXd xi_sample_intercept = get_intercept_matrix(xi_sample_matrices[i]);
         MatrixXd yi_sample_intercept = get_intercept_matrix(yi_sample_matrices[i]);
 
@@ -317,7 +319,9 @@ std::vector<MatrixXd> get_bi_matrices(const MatrixXd& M, int p, int q, int m) {
 */
 std::vector<MatrixXd> get_xi_mapped_matrices(const MatrixXd& M, int p, int q, int m) {
 
+    std::cerr<<"get_xi_mapped_matrices -> get_xi_matrices"<<std::endl;
     std::vector<MatrixXd> xi_matrices = get_xi_matrices(M, p, m);
+    std::cerr<<"get_xi_mapped_matrices -> get_bi_matrices"<<std::endl;
     std::vector<MatrixXd> bi_matrices = get_bi_matrices(M, p, q, m);
 
     // TODO determine if this check can be removed
@@ -325,7 +329,8 @@ std::vector<MatrixXd> get_xi_mapped_matrices(const MatrixXd& M, int p, int q, in
 
     std::vector<MatrixXd> xi_mapped_matrices;
 
-    for (int i = 0; i < bi_matrices.size(); i++) {
+    std::cerr<<"get_intercept_matrix"<<std::endl;
+    for (unsigned int i = 0; i < bi_matrices.size(); i++) {
         xi_mapped_matrices.push_back(get_intercept_matrix(xi_matrices[i]) * bi_matrices[i]);
     }
 
@@ -350,19 +355,23 @@ MatrixXd fast_mds(
   const int rows_to_sample, 
   const int desired_dims
 ){
+    Timer tmr;
     std::cout<<"FastMDS"<<std::endl;
     std::cout<<"rows_per_partition = "  <<rows_per_partition<<std::endl; 
     std::cout<<"rows_to_sample     = "  <<rows_to_sample    <<std::endl; 
     std::cout<<"desired_dims       = "  <<desired_dims      <<std::endl; 
 
+    tmr.reset();
+    std::cout<<"fast_mds passing control to get_xi_mapped_matrices..."<<std::endl;
     std::vector<MatrixXd> xi_mapped_matrices = get_xi_mapped_matrices(M, rows_per_partition, rows_to_sample, desired_dims);
+    std::cout<<"Got xi_mapped_matrices in "<<tmr.elapsed()<<" s."<<std::endl;
 
     const int M_rows          = M.rows();
     const int cols            = desired_dims + 1;
     const int num_submatrices = xi_mapped_matrices.size();
 
-    MatrixXd result = MatrixXd(M_rows, cols);
-
+    tmr.reset();
+    MatrixXd result(M_rows, cols);
     for (int i = 0; i < num_submatrices - 1; i++) {
         result.block(i * rows_per_partition, 0, rows_per_partition, cols) = xi_mapped_matrices[i];
     }
@@ -374,5 +383,9 @@ MatrixXd fast_mds(
         cols
     ) = xi_mapped_matrices[num_submatrices - 1];
 
-    return result.block(0, 1, M_rows, cols - 1);
+    auto ret = result.block(0, 1, M_rows, cols - 1);
+
+    std::cout<<"Stiched in "<<tmr.elapsed()<<" s."<<std::endl;
+
+    return ret;
 }

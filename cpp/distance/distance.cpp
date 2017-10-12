@@ -10,7 +10,7 @@
 using namespace Eigen;
 
 void PrintVector(std::string id, const std::vector<double> &a, const int width, const int height){
-  // return;
+  return;
 
   std::cout<<id<<std::endl;
   for(int y=0;y<height;y++){

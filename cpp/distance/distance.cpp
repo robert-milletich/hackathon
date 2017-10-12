@@ -351,7 +351,6 @@ dvec simple_distance7(const dvec &M, const int width, const int height) {
   for(int row1 = 0;        row1 < height; row1++)
   for(int row2 = row1 + 1; row2 < height; row2++){
     double temp_sum = 0;
-    #pragma omp simd reduction(+:temp_sum)
     for(int x = 0; x < width; x++){
       const double temp = M[row1*width+x]-M[row2*width+x];
       temp_sum += temp * temp;
@@ -466,12 +465,12 @@ int main(int argc, char **argv){
 
   std::vector< std::pair<std::string, std::function< dvec(dvec,const int, const int) > > > funcs = {
     {GET_VARIABLE_NAME(simple_distance0), simple_distance0},
-    {GET_VARIABLE_NAME(simple_distance1), simple_distance1},
-    {GET_VARIABLE_NAME(simple_distance2), simple_distance2},
-    {GET_VARIABLE_NAME(simple_distance3), simple_distance3},
-    {GET_VARIABLE_NAME(simple_distance4), simple_distance4},
-    {GET_VARIABLE_NAME(simple_distance5), simple_distance5},
-    {GET_VARIABLE_NAME(simple_distance6), simple_distance6},
+    //{GET_VARIABLE_NAME(simple_distance1), simple_distance1},
+    //{GET_VARIABLE_NAME(simple_distance2), simple_distance2},
+    //{GET_VARIABLE_NAME(simple_distance3), simple_distance3},
+    //{GET_VARIABLE_NAME(simple_distance4), simple_distance4},
+    //{GET_VARIABLE_NAME(simple_distance5), simple_distance5},
+    //{GET_VARIABLE_NAME(simple_distance6), simple_distance6},
     {GET_VARIABLE_NAME(simple_distance7), simple_distance7}
     //{GET_VARIABLE_NAME(distance_gpu), distance_gpu}
   };

@@ -67,55 +67,6 @@ std::vector<double> simple_distance(const std::vector<double> &M, const int widt
 }
 
 
-
-std::vector<double> distance5(const std::vector<double> &M, const int width, const int height, const int BS) {
-  Timer tmr;
-
-  std::vector<double> result(height*height, 0);
-
-  for(int row1 = 0;       row1 < height;                    row1+=BS )
-  for(int r1b  = row1;    r1b  < std::min(height, row1+BS); r1b++    )
-  for(int row2 = r1b + 1; row2 < height;                    row2++   ){
-    double temp_sum = 0;
-    for(int i = 0; i < width; i++){
-        const double temp = M[r1b*width+i] - M[row2*width+i];
-        temp_sum += temp * temp;
-    }
-    result[r1b*height+row2] = temp_sum;
-    result[row2*height+r1b] = temp_sum;
-  }
-
-  PrintTimings("distance5", width, height, tmr.elapsed());
-
-  return result;
-}
-
-
-
-std::vector<double> distance6(const std::vector<double> &M, const int width, const int height, const int BS) {
-  Timer tmr;
-
-  std::vector<double> result(height*height, 0);
-
-  for(int row1 = 0;     row1 < height;                      row1 += BS )
-  for(int r1b  = row1;  r1b  < std::min(height, row1 + BS); r1b++      )
-  for(int row2 = r1b+1; row2 < height;                      row2 += BS )
-  for(int r2b  = row2;  r2b  < std::min(height, row2 + BS); r2b++      ){
-    double temp_sum = 0;
-    for(int i = 0; i < width; i++){
-        const double temp = M[r1b*width+i] - M[r2b*width+i];
-        temp_sum += temp * temp;
-    }
-    result[r1b*height+r2b] = temp_sum;
-    result[r2b*height+r1b] = temp_sum;
-  }
-
-  PrintTimings("distance6", width, height, tmr.elapsed());
-
-  return result;
-}
-
-
 std::vector<double> distance_gpu(const std::vector<double>& M, const int width, const int height) {
     Timer tmr;
 
@@ -199,11 +150,7 @@ int main(int argc, char **argv){
 
   if(width==height)
     ret.emplace_back("distance_eigen_square", EigenTest(distance_eigen_square, M, width, height));
-  // distance1(Test_Matrix);
   ret.emplace_back("simple_distance", simple_distance(M, width, height));
-  //distance3(Test_Matrix, i);
-  ret.emplace_back("distance5", distance5(M, width, height, 500));
-  ret.emplace_back("distance6", distance6(M, width, height, 100));
   ret.emplace_back("distance_gpu", distance_gpu(M, width, height));
 
   for(const auto &i: ret)

@@ -34,6 +34,18 @@ def distance_matrix(mat, d_sq):
             tmp = mat[i, k] - mat[j, k]
             d += tmp * tmp
         d_sq[i, j] = d
+        
+@cuda.jit("void(float{}[:, :], float{}[:, :])".format(bits, bits), device=0)
+def distance_matrix_cache(mat, d_sq):
+    m = mat.shape[0]
+    n = mat.shape[1]
+    i, j = cuda.grid(2)
+    d = 0
+    if i < m and j < m:
+        for k in range(n):
+            tmp = mat[i, k] - mat[j, k]
+            d += tmp * tmp
+        d_sq[i, j] = d
 
 format_str = "void(float{}, float{}[:, :], float{}[:, :], float{}[:, :])"
 @cuda.jit(format_str.format(bits, bits, bits, bits))
@@ -174,7 +186,6 @@ def gpu_dist_center_blas(mat):
     
     return b_
 
-
 def gpu_dist_matrix(mat):
     rows = mat.shape[0]
     
@@ -189,8 +200,24 @@ def gpu_dist_matrix(mat):
     
     return out
 
-rows = 1000
-cols = 10
+def gpu_dist_matrix_cache(mat):
+    rows = mat.shape[0]
+    
+    block_dim = (16, 16)
+    grid_dim = (rows/block_dim[0] + 1, rows/block_dim[1] + 1)
+    
+    stream = cuda.stream()
+    
+    with stream.auto_synchronize():
+        mat2 = cuda.to_device(np.asarray(mat, dtype=np_type), stream=stream)
+        out2 = cuda.device_array((rows, rows))
+        distance_matrix[grid_dim, block_dim](mat2, out2)
+        out = out2.copy_to_host(stream=stream)
+    
+    return out
+
+rows = 300
+cols = 100
 
 x = 1.
 
@@ -198,20 +225,20 @@ mat = np.random.randn(rows, cols)
 
 #d_mat = gpu_dist_matrix(mat)
 
-start = time.time()
-n_ = len(mat)
-d_mat = spatial.distance.cdist(mat, mat)
-d_sq = d_mat * d_mat 
-j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
-b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
-print '--------------------no gpu: {:.4f} sec'.format(time.time() - start)
-
-start = time.time()
-n_ = len(mat)
-d_sq = gpu_dist_matrix(mat)
-j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
-b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
-print '---------gpu distance only: {:.4f} sec'.format(time.time() - start)
+#start = time.time()
+#n_ = len(mat)
+#d_mat = spatial.distance.cdist(mat, mat)
+#d_sq = d_mat * d_mat 
+#j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
+#b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
+#print '--------------------no gpu: {:.4f} sec'.format(time.time() - start)
+#
+#start = time.time()
+#n_ = len(mat)
+#d_sq = gpu_dist_matrix(mat)
+#j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
+#b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
+#print '---------gpu distance only: {:.4f} sec'.format(time.time() - start)
 
 start = time.time()
 n_ = len(mat)
@@ -222,19 +249,26 @@ print 'gpu distance only w/double: {:.4f} sec'.format(time.time() - start)
 
 start = time.time()
 n_ = len(mat)
-b_gpu = gpu_dist_double_center(mat)
-print '-----gpu distance w/center: {:.4f} sec |'.format(time.time() - start),
-print np.sum((b_ - b_gpu) ** 2)
+d_sq = gpu_dist_matrix_cache(mat)
+d_s = (-1./2.)*d_sq
+b_ = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+print 'gpu distance (cach) double: {:.4f} sec'.format(time.time() - start)
 
-start = time.time()
-b_gpu = gpu_dist_center(mat)
-print '------------gpu everything: {:.4f} sec |'.format(time.time() - start),
-print np.sum((b_ - b_gpu) ** 2)
-
-start = time.time()
-b_gpu_blas = gpu_dist_center_blas(mat)
-print 'gpu everything with cublas: {:.4f} sec |'.format(time.time() - start),
-print np.sum((b_gpu_blas - b_gpu) ** 2)
+#start = time.time()
+#n_ = len(mat)
+#b_gpu = gpu_dist_double_center(mat)
+#print '-----gpu distance w/center: {:.4f} sec |'.format(time.time() - start),
+#print np.sum((b_ - b_gpu) ** 2)
+#
+#start = time.time()
+#b_gpu = gpu_dist_center(mat)
+#print '------------gpu everything: {:.4f} sec |'.format(time.time() - start),
+#print np.sum((b_ - b_gpu) ** 2)
+#
+#start = time.time()
+#b_gpu_blas = gpu_dist_center_blas(mat)
+#print 'gpu everything with cublas: {:.4f} sec |'.format(time.time() - start),
+#print np.sum((b_gpu_blas - b_gpu) ** 2)
 
 d_s = (-1./2.)*d_sq
 d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()

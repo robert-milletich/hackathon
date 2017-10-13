@@ -125,6 +125,8 @@ std::vector<MatrixXd> partition_matrix(const MatrixXd& M, int p) {
 
     partition.push_back(M.block((partition_size - 1) * p, 0, p + rows % p, cols));
 
+    std::cerr<<"Partitions generated = "<<partition.size()<<std::endl;
+
     return partition;
 }
 

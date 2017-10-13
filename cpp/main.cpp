@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
   // perform FastMDS on the read-in matrix with partition_size, q, m as above
   MatrixXd result = fast_mds(M, partition_size, rows_to_sample, desired_dim);
 
-  std::cout<<"Calculation time "<<tmr.elapsed()<<" s"<<std::endl;
+  std::cerr<<"Calculation time "<<tmr.elapsed()<<" s"<<std::endl;
 
   // write out the result to outfile
   write_matrix(result, outfile);

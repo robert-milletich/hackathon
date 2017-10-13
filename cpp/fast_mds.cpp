@@ -179,8 +179,9 @@ vector_of_matrix_pairs get_ai_xi_matrices(const MatrixXd& M, int p, int m) {
         const auto ret = mds(thismat, m);
         result.at(i) = std::make_pair(thismat, ret);
     }
+    pg.stop();
 
-    std::cerr<<"get_ai_xi_matrices time = " << pg.stop() << " s"<<std::endl;
+    std::cerr<<"get_ai_xi_matrices time = " << pg.time_it_took() << " s"<<std::endl;
 
     return result;
 }
@@ -233,8 +234,9 @@ std::vector<MatrixXd> get_xi_matrices(const MatrixXd& M, int p, int m) {
         result.at(i) = mds(partition.at(i), m);
         pg.update(i);
     }
+    pg.stop();
 
-    std::cerr<<"get_ai_xi_matrices time = " << pg.stop() << " s"<<std::endl;    
+    std::cerr<<"get_ai_xi_matrices time = " << pg.time_it_took() << " s"<<std::endl;    
 
     return result;
 }
@@ -364,15 +366,15 @@ MatrixXd fast_mds(
   const int desired_dims
 ){
     Timer tmr;
-    std::cout<<"FastMDS"<<std::endl;
-    std::cout<<"rows_per_partition = "  <<rows_per_partition<<std::endl;
-    std::cout<<"rows_to_sample     = "  <<rows_to_sample    <<std::endl;
-    std::cout<<"desired_dims       = "  <<desired_dims      <<std::endl;
+    std::cerr<<"FastMDS"<<std::endl;
+    std::cerr<<"rows_per_partition = "  <<rows_per_partition<<std::endl;
+    std::cerr<<"rows_to_sample     = "  <<rows_to_sample    <<std::endl;
+    std::cerr<<"desired_dims       = "  <<desired_dims      <<std::endl;
 
     tmr.reset();
-    std::cout<<"fast_mds passing control to get_xi_mapped_matrices..."<<std::endl;
+    std::cerr<<"fast_mds passing control to get_xi_mapped_matrices..."<<std::endl;
     std::vector<MatrixXd> xi_mapped_matrices = get_xi_mapped_matrices(M, rows_per_partition, rows_to_sample, desired_dims);
-    std::cout<<"Got xi_mapped_matrices in "<<tmr.elapsed()<<" s."<<std::endl;
+    std::cerr<<"Got xi_mapped_matrices in "<<tmr.elapsed()<<" s."<<std::endl;
 
     const int M_rows          = M.rows();
     const int cols            = desired_dims + 1;
@@ -393,7 +395,7 @@ MatrixXd fast_mds(
 
     auto ret = result.block(0, 1, M_rows, cols - 1);
 
-    std::cout<<"Stiched in "<<tmr.elapsed()<<" s."<<std::endl;
+    std::cerr<<"Stiched in "<<tmr.elapsed()<<" s."<<std::endl;
 
     return ret;
 }

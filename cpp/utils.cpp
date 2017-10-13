@@ -11,32 +11,20 @@
     @return - a (rows X cols) matrix populated with values from filename
 */
 MatrixXd read_matrix(std::string filename, int rows, int cols) {
-    std::ifstream in;
-    in.open(filename);
+  std::ifstream fin(filename);
 
-    int i = 0;
-    int j = 0;
+  if(!fin.good())
+    throw std::runtime_error("Could not open input file '"+filename+"'!");
 
-    MatrixXd result = MatrixXd(rows, cols);
+  fin>>rows>>cols;
 
-    std::string line;
-    while (std::getline(in, line)) {
-        // convert line to a string stream for use in std::getline
-        std::stringstream line_stream(line);
-        std::string num_string;
+  MatrixXd result(rows, cols);
 
-        while (std::getline(line_stream, num_string, ',')) {
-            // convert num_string to a double and assign to result(i, j)
-            // discard the delimiter ','
-            result(i, j) = std::stod(num_string);
-            j++;
-            // keep j in the standard range: [0, cols - 1]
-            j = j % cols;
-        }
-        i++;
-    }
+  for(int y=0;y<rows;y++)
+  for(int x=0;x<cols;x++)
+    fin>>result(y,x);
 
-    return result;
+  return result;
 }
 
 

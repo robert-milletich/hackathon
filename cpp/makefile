@@ -1,5 +1,5 @@
 CC = g++
-CC_FLAGS = -w -std=c++11
+CC_FLAGS = -g -O3 -std=c++11 -isystem . -Wall -Wextra
 
 EXEC = main
 SOURCES = $(wildcard *.cpp)

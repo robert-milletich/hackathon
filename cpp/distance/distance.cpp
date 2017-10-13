@@ -6,12 +6,12 @@
 #include <utility>
 #include <functional>
 
-#include <x86intrin.h>  // SSE3
+// #include <x86intrin.h>  // SSE4
 
-typedef union{
-  __m128d v;
-  double d[2];
-} v2df_t;
+// typedef union{
+//   __m128d v;
+//   double d[2];
+// } v2df_t;
 
 #include "Timer.hpp"
 #define GET_VARIABLE_NAME(Variable) (#Variable)
@@ -322,66 +322,66 @@ dvec simple_distance5(const dvec &M, const int width, const int height) {
 
 
 
+//Attempt at using SIMD and FPUs
 
+// double inline inner_distance6(const dvec &M, const int width, int row1, int row2){
+//   double temp_sum = 0;
 
-double inline inner_distance6(const dvec &M, const int width, int row1, int row2){
-  double temp_sum = 0;
+//   const double* const mdata = M.data();
+//   const double*       rdat1 = mdata+row1*width;
+//   const double*       rdat2 = mdata+row2*width;
 
-  const double* const mdata = M.data();
-  const double*       rdat1 = mdata+row1*width;
-  const double*       rdat2 = mdata+row2*width;
+//   const int STEP = 4;
+//   const int cleanwidth = STEP*(width/STEP);
 
-  const int STEP = 4;
-  const int cleanwidth = STEP*(width/STEP);
+//   // std::cerr<<"cleanwidth="<<(cleanwidth)<<std::endl;
 
-  // std::cerr<<"cleanwidth="<<(cleanwidth)<<std::endl;
+//   v2df_t regsum;
+//   v2df_t reg1a;
+//   v2df_t reg1b;
+//   v2df_t reg2a;
+//   v2df_t reg2b;
 
-  v2df_t regsum;
-  v2df_t reg1a;
-  v2df_t reg1b;
-  v2df_t reg2a;
-  v2df_t reg2b;
+//   regsum.v = _mm_setzero_pd();
 
-  regsum.v = _mm_setzero_pd();
+//   for(int x = 0; x < cleanwidth; x+=STEP, rdat1+=STEP, rdat2+=STEP){
+//     reg1a.v = _mm_loadu_pd( rdat1   );
+//     reg1b.v = _mm_loadu_pd( rdat1+1 );
+//     reg2a.v = _mm_loadu_pd( rdat2   );
+//     reg2b.v = _mm_loadu_pd( rdat2+1 );
 
-  for(int x = 0; x < cleanwidth; x+=STEP, rdat1+=STEP, rdat2+=STEP){
-    reg1a.v = _mm_loadu_pd( rdat1   );
-    reg1b.v = _mm_loadu_pd( rdat1+1 );
-    reg2a.v = _mm_loadu_pd( rdat2   );
-    reg2b.v = _mm_loadu_pd( rdat2+1 );
+//     reg1a.v  -= reg2a.v;
+//     reg1a.v  *= reg1a.v;
+//     regsum.v += reg1a.v; // _mm_add_pd(regsum.v, reg1a.v);
 
-    reg1a.v  -= reg2a.v;
-    reg1a.v  *= reg1a.v;
-    regsum.v += reg1a.v; // _mm_add_pd(regsum.v, reg1a.v);
+//     reg1b.v -= reg2b.v;
+//     reg1b.v *= reg1b.v;
+//     regsum.v += reg1b.v; // _mm_add_pd(regsum.v, reg1a.v);
+//   }
 
-    reg1b.v -= reg2b.v;
-    reg1b.v *= reg1b.v;
-    regsum.v += reg1b.v; // _mm_add_pd(regsum.v, reg1a.v);
-  }
+//   temp_sum += regsum.d[0] + regsum.d[1];
 
-  temp_sum += regsum.d[0] + regsum.d[1];
+//   // std::cerr<<"Fin start="<<(STEP*cleanwidth)<<std::endl;
+//   for(int x=cleanwidth;x<width;x++,rdat1++,rdat2++){
+//     const double temp = *rdat1 - *rdat2;
+//     temp_sum += temp*temp;
+//   }
 
-  // std::cerr<<"Fin start="<<(STEP*cleanwidth)<<std::endl;
-  for(int x=cleanwidth;x<width;x++,rdat1++,rdat2++){
-    const double temp = *rdat1 - *rdat2;
-    temp_sum += temp*temp;
-  }
+//   return temp_sum;
+// }
 
-  return temp_sum;
-}
+// dvec simple_distance6(const dvec &M, const int width, const int height) {
+//   dvec result(height*height, 0);
 
-dvec simple_distance6(const dvec &M, const int width, const int height) {
-  dvec result(height*height, 0);
+//   for(int row1 = 0;        row1 < height; row1++)
+//   for(int row2 = row1 + 1; row2 < height; row2++){
+//     const double temp_sum = inner_distance6(M, width, row1, row2);
+//     result[row1*height+row2] = temp_sum;
+//     result[row2*height+row1] = temp_sum;
+//   }
 
-  for(int row1 = 0;        row1 < height; row1++)
-  for(int row2 = row1 + 1; row2 < height; row2++){
-    const double temp_sum = inner_distance6(M, width, row1, row2);
-    result[row1*height+row2] = temp_sum;
-    result[row2*height+row1] = temp_sum;
-  }
-
-  return result;
-}
+//   return result;
+// }
 
 
 

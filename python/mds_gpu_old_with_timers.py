@@ -42,19 +42,25 @@ def distance_matrix(mat, out):
             d += tmp * tmp
         out[i, j] = d
 
+#def gpu_dist_matrix(mat):
+#    rows = mat.shape[0]
+#    
+#    block_dim = (16, 16)
+#    grid_dim = (int(rows/block_dim[0] + 1), int(rows/block_dim[1] + 1))
+#    
+#    stream = cuda.stream()
+#    mat2 = cuda.to_device(np.asarray(mat, dtype=np_type), stream=stream)
+#    out2 = cuda.device_array((rows, rows))
+#    distance_matrix[grid_dim, block_dim](mat2, out2)
+#    out = out2.copy_to_host(stream=stream)
+#    
+#    return out
+
+
 def gpu_dist_matrix(mat):
-    rows = mat.shape[0]
-    
-    block_dim = (16, 16)
-    grid_dim = (int(rows/block_dim[0] + 1), int(rows/block_dim[1] + 1))
-    
-    stream = cuda.stream()
-    mat2 = cuda.to_device(np.asarray(mat, dtype=np_type), stream=stream)
-    out2 = cuda.device_array((rows, rows))
-    distance_matrix[grid_dim, block_dim](mat2, out2)
-    out = out2.copy_to_host(stream=stream)
-    
-    return out
+    d_mat = spatial.distance.cdist(mat, mat)
+    d_sq = d_mat * d_mat 
+    return d_sq
 
 
 class MDSError(Exception):
@@ -73,8 +79,8 @@ def mds(input_matrix):
 #    d_mat = spatial.distance.cdist(mat, mat)
 #    d_sq = d_mat * d_mat 
     d_sq = gpu_dist_matrix(mat)
-    d_s = (-1./2.)*d_sq
-    b_ = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+    j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
+    b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
     
 #     Attempt 1 of eig
     eig_vals, eig_vecs = SP.eigsh(b_, k=DIMENSIONS)

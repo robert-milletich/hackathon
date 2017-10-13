@@ -572,8 +572,8 @@ int main(int argc, char **argv){
     //{GET_VARIABLE_NAME(simple_distance6), simple_distance6},
     //{GET_VARIABLE_NAME(simple_distance7), simple_distance7},
     //{GET_VARIABLE_NAME(simple_distance8), simple_distance8},
-    {GET_VARIABLE_NAME(simple_distance_levi1), simple_distance_levi1}
-    //{GET_VARIABLE_NAME(distance_gpu), distance_gpu}
+    {GET_VARIABLE_NAME(simple_distance_levi1), simple_distance_levi1},
+    {GET_VARIABLE_NAME(distance_gpu), distance_gpu}
   };
 
   std::vector<std::pair<std::string,dvec > > ret;

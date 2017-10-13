@@ -4,7 +4,7 @@
 #define _prng_header
 
 ///Maximum number of threads this class should deal with
-#define PRNG_THREAD_MAX 32
+#define PRNG_THREAD_MAX 320
 
 #ifdef _OPENMP
   #include <omp.h>

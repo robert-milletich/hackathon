@@ -90,8 +90,13 @@ void center_matrix(std::vector<double> &M, const int N) {
 std::vector<double> get_distance_squared_matrix(const std::vector<double> &M, const int width, const int height) {
   std::vector<double> result(height*height, 0);
 
-  for(int row1 = 0;        row1 < height; row1++)
-  for(int row2 = row1 + 1; row2 < height; row2++){
+  const int CS = 10; //TODO: Find optimal value
+
+  for(int row1c = 0;     row1c<height;row1c+=CS)
+  for(int row2c = row1c; row2c<height;row2c+=CS)
+
+  for(int row1 = row1c; row1 < std::min(height,row1c+CS); row1++)
+  for(int row2 = row2c; row2 < std::min(height,row2c+CS); row2++){
     double temp_sum = 0;
     for(int x = 0; x < width; x++){
       const double temp = M[row1*width+x] - M[row2*width+x];

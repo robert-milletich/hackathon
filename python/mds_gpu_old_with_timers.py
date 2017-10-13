@@ -368,7 +368,7 @@ def time_trials(func, mat, time_to_wait):
     out = func(mat)
     runs = [time.time() - start]
     timer = time.time()
-    while time.time() - timer < time_to_wait:
+    while np.sum(runs) < time_to_wait:
         start = time.time()
         out = func(mat)
         runs.append(time.time() - start)

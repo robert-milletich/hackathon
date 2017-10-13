@@ -14,7 +14,7 @@ from numba import cuda
 import time
 
 
-MAX_MDS = 8500
+MAX_MDS = 11000
 MAX_MDS_2 = 1000
 DIMENSIONS = 3
 
@@ -371,67 +371,67 @@ def time_trials(func, mat, time_to_wait):
 
 time_to_wait = 5
 
-print("Eigendecomposition:")
-# Small EigenDecomp
-rows = 500
-cols = 500
-d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
-d_s = (-1./2.)*d_sq
-mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
-time_trials(eigendecomp, mat, time_to_wait)
-
-# Medium EigenDecomp
-rows = 2000
-cols = 2000
-d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
-d_s = (-1./2.)*d_sq
-mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
-time_trials(eigendecomp, mat, time_to_wait)
-
-# Large EigenDecomp
-rows = 10000
-cols = 100
-d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
-d_s = (-1./2.)*d_sq
-mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
-time_trials(eigendecomp, mat, time_to_wait)
-
-print("Distance Matrix:")
-# Small distance matrix
-rows = 500
-cols = 100
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(gpu_dist_matrix, mat, time_to_wait)
-
-# Medium distance matrix
-rows = 2000
-cols = 2000
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(gpu_dist_matrix, mat, time_to_wait)
-
-# Large distance matrix
-rows = 10000
-cols = 10000
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(gpu_dist_matrix, mat, time_to_wait)
-
-print("MDS:")
-# Small MDS
-rows = 500
-cols = 100
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(mds, mat, time_to_wait)
-
-# Medium MDS
-rows = 2000
-cols = 200
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(mds, mat, time_to_wait)
+#print("Eigendecomposition:")
+## Small EigenDecomp
+#rows = 500
+#cols = 500
+#d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+#d_s = (-1./2.)*d_sq
+#mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+#time_trials(eigendecomp, mat, time_to_wait)
+#
+## Medium EigenDecomp
+#rows = 2000
+#cols = 2000
+#d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+#d_s = (-1./2.)*d_sq
+#mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+#time_trials(eigendecomp, mat, time_to_wait)
+#
+## Large EigenDecomp
+#rows = 10000
+#cols = 100
+#d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+#d_s = (-1./2.)*d_sq
+#mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+#time_trials(eigendecomp, mat, time_to_wait)
+#
+#print("Distance Matrix:")
+## Small distance matrix
+#rows = 500
+#cols = 100
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(gpu_dist_matrix, mat, time_to_wait)
+#
+## Medium distance matrix
+#rows = 2000
+#cols = 2000
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(gpu_dist_matrix, mat, time_to_wait)
+#
+## Large distance matrix
+#rows = 10000
+#cols = 10000
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(gpu_dist_matrix, mat, time_to_wait)
+#
+#print("MDS:")
+## Small MDS
+#rows = 500
+#cols = 100
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(mds, mat, time_to_wait)
+#
+## Medium MDS
+#rows = 2000
+#cols = 200
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(mds, mat, time_to_wait)
 
 # Large MDS
 rows = 10000

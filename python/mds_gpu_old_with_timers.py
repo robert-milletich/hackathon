@@ -14,7 +14,7 @@ from numba import cuda
 import time
 
 
-MAX_MDS = 8500
+MAX_MDS = 11000
 MAX_MDS_2 = 1000
 DIMENSIONS = 3
 

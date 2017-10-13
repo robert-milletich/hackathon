@@ -6,12 +6,12 @@
 #include <utility>
 #include <functional>
 
-#include <x86intrin.h>  // SSE3
+// #include <x86intrin.h>  // SSE4
 
-typedef union{
-  __m128d v;
-  double d[2];
-} v2df_t;
+// typedef union{
+//   __m128d v;
+//   double d[2];
+// } v2df_t;
 
 #include "Timer.hpp"
 #define GET_VARIABLE_NAME(Variable) (#Variable)
@@ -73,6 +73,50 @@ dvec simple_distance0(const dvec &M, const int width, const int height) {
   return result;
 }
 
+
+dvec simple_distance_levi1(const dvec &M, const int width, const int height) {
+  dvec result(height*height, 0);
+
+  const int CS = 10;
+
+  for(int row1c = 0;     row1c<height;row1c+=CS)
+  for(int row2c = row1c; row2c<height;row2c+=CS)
+
+  for(int row1 = row1c; row1 < std::min(height,row1c+CS); row1++)
+  for(int row2 = row2c; row2 < std::min(height,row2c+CS); row2++){
+    double temp_sum = 0;
+    for(int x = 0; x < width; x++){
+      const double temp = M[row1*width+x] - M[row2*width+x];
+      temp_sum += temp * temp;
+    }
+    result[row1*height+row2] = temp_sum;
+    result[row2*height+row1] = temp_sum;
+  }
+
+  return result;
+}
+
+
+
+dvec simple_distance_levi2(const dvec &M, const int width, const int height, const int CS) {
+  dvec result(height*height, 0);
+
+  for(int row1c = 0;     row1c<height;row1c+=CS)
+  for(int row2c = row1c; row2c<height;row2c+=CS)
+
+  for(int row1 = row1c; row1 < std::min(height,row1c+CS); row1++)
+  for(int row2 = row2c; row2 < std::min(height,row2c+CS); row2++){
+    double temp_sum = 0;
+    for(int x = 0; x < width; x++){
+      const double temp = M[row1*width+x] - M[row2*width+x];
+      temp_sum += temp * temp;
+    }
+    result[row1*height+row2] = temp_sum;
+    // result[row2*height+row1] = temp_sum;
+  }
+
+  return result;
+}
 
 
 
@@ -278,66 +322,66 @@ dvec simple_distance5(const dvec &M, const int width, const int height) {
 
 
 
+//Attempt at using SIMD and FPUs
 
+// double inline inner_distance6(const dvec &M, const int width, int row1, int row2){
+//   double temp_sum = 0;
 
-double inline inner_distance6(const dvec &M, const int width, int row1, int row2){
-  double temp_sum = 0;
+//   const double* const mdata = M.data();
+//   const double*       rdat1 = mdata+row1*width;
+//   const double*       rdat2 = mdata+row2*width;
 
-  const double* const mdata = M.data();
-  const double*       rdat1 = mdata+row1*width;
-  const double*       rdat2 = mdata+row2*width;
+//   const int STEP = 4;
+//   const int cleanwidth = STEP*(width/STEP);
 
-  const int STEP = 4;
-  const int cleanwidth = STEP*(width/STEP);
+//   // std::cerr<<"cleanwidth="<<(cleanwidth)<<std::endl;
 
-  // std::cerr<<"cleanwidth="<<(cleanwidth)<<std::endl;
+//   v2df_t regsum;
+//   v2df_t reg1a;
+//   v2df_t reg1b;
+//   v2df_t reg2a;
+//   v2df_t reg2b;
 
-  v2df_t regsum;
-  v2df_t reg1a;
-  v2df_t reg1b;
-  v2df_t reg2a;
-  v2df_t reg2b;
+//   regsum.v = _mm_setzero_pd();
 
-  regsum.v = _mm_setzero_pd();
+//   for(int x = 0; x < cleanwidth; x+=STEP, rdat1+=STEP, rdat2+=STEP){
+//     reg1a.v = _mm_loadu_pd( rdat1   );
+//     reg1b.v = _mm_loadu_pd( rdat1+1 );
+//     reg2a.v = _mm_loadu_pd( rdat2   );
+//     reg2b.v = _mm_loadu_pd( rdat2+1 );
 
-  for(int x = 0; x < cleanwidth; x+=STEP, rdat1+=STEP, rdat2+=STEP){
-    reg1a.v = _mm_loadu_pd( rdat1   );
-    reg1b.v = _mm_loadu_pd( rdat1+1 );
-    reg2a.v = _mm_loadu_pd( rdat2   );
-    reg2b.v = _mm_loadu_pd( rdat2+1 );
+//     reg1a.v  -= reg2a.v;
+//     reg1a.v  *= reg1a.v;
+//     regsum.v += reg1a.v; // _mm_add_pd(regsum.v, reg1a.v);
 
-    reg1a.v  -= reg2a.v;
-    reg1a.v  *= reg1a.v;
-    regsum.v += reg1a.v; // _mm_add_pd(regsum.v, reg1a.v);
+//     reg1b.v -= reg2b.v;
+//     reg1b.v *= reg1b.v;
+//     regsum.v += reg1b.v; // _mm_add_pd(regsum.v, reg1a.v);
+//   }
 
-    reg1b.v -= reg2b.v;
-    reg1b.v *= reg1b.v;
-    regsum.v += reg1b.v; // _mm_add_pd(regsum.v, reg1a.v);
-  }
+//   temp_sum += regsum.d[0] + regsum.d[1];
 
-  temp_sum += regsum.d[0] + regsum.d[1];
+//   // std::cerr<<"Fin start="<<(STEP*cleanwidth)<<std::endl;
+//   for(int x=cleanwidth;x<width;x++,rdat1++,rdat2++){
+//     const double temp = *rdat1 - *rdat2;
+//     temp_sum += temp*temp;
+//   }
 
-  // std::cerr<<"Fin start="<<(STEP*cleanwidth)<<std::endl;
-  for(int x=cleanwidth;x<width;x++,rdat1++,rdat2++){
-    const double temp = *rdat1 - *rdat2;
-    temp_sum += temp*temp;
-  }
+//   return temp_sum;
+// }
 
-  return temp_sum;
-}
+// dvec simple_distance6(const dvec &M, const int width, const int height) {
+//   dvec result(height*height, 0);
 
-dvec simple_distance6(const dvec &M, const int width, const int height) {
-  dvec result(height*height, 0);
+//   for(int row1 = 0;        row1 < height; row1++)
+//   for(int row2 = row1 + 1; row2 < height; row2++){
+//     const double temp_sum = inner_distance6(M, width, row1, row2);
+//     result[row1*height+row2] = temp_sum;
+//     result[row2*height+row1] = temp_sum;
+//   }
 
-  for(int row1 = 0;        row1 < height; row1++)
-  for(int row2 = row1 + 1; row2 < height; row2++){
-    const double temp_sum = inner_distance6(M, width, row1, row2);
-    result[row1*height+row2] = temp_sum;
-    result[row2*height+row1] = temp_sum;
-  }
-
-  return result;
-}
+//   return result;
+// }
 
 
 
@@ -348,21 +392,55 @@ dvec simple_distance6(const dvec &M, const int width, const int height) {
 dvec simple_distance7(const dvec &M, const int width, const int height) {
   dvec result(height*height, 0);
 
-  for(int row1 = 0;        row1 < height; row1++)
-  for(int row2 = row1 + 1; row2 < height; row2++){
-    double temp_sum = 0;
-    for(int x = 0; x < width; x++){
-      const double temp = M[row1*width+x]-M[row2*width+x];
-      temp_sum += temp * temp;
+  const int RB_SIZE = 64;
+  const int cleanwidth = RB_SIZE*(width/RB_SIZE);
+
+  const double *mat = M.data();
+
+  for(int rowblock=0;rowblock<width;rowblock+=RB_SIZE)
+  for(int row1i = 0;          row1i < height; row1i++){
+    const double *row1 = mat+row1i*width;
+    for(int row2i = row1i + 1; row2i < height; row2i++){
+      double temp_sum = 0;
+      const double *row2 = mat+row2i*width;
+      for(int x = rowblock; x < rowblock+RB_SIZE; x++){
+        const double temp = *(row1+x) - *(row2+x);
+        temp_sum += temp * temp;
+      }
+      for(int x=RB_SIZE;x<width;x++){
+        const double temp = *(row1+x) - *(row2+x);
+        temp_sum += temp*temp;
+      }
+      result[row1i*height+row2i] += temp_sum;
+      result[row2i*height+row1i] += temp_sum;
     }
-    result[row1*height+row2] = temp_sum;
-    result[row2*height+row1] = temp_sum;
   }
+
+
 
   return result;
 }
 
 
+
+
+
+dvec simple_distance8(const dvec &M, const int width, const int height) {
+  dvec result(height*height, 0);
+  int i = 0;
+
+  for(int row1 = 0;        row1 < height; row1++)
+  for(int row2 = row1 + 1; row2 < height; row2++){
+    double temp_sum = 0;
+    for(int x = 0; x < width; x++){
+      const double temp = M[row1*width+x] - M[row2*width+x];
+      temp_sum += temp * temp;
+    }
+    result[i++] = temp_sum;
+  }
+
+  return result;
+}
 
 
 
@@ -446,6 +524,21 @@ dvec TimeDistance(std::string id, T func, const dvec &M, const int width, const 
   return ret;
 }
 
+template<class T>
+dvec TimeDistanceChunk(std::string id, T func, const dvec &M, const int width, const int height, const int CS){
+  Timer tmr;
+
+  const int REPEAT = 1;
+
+  dvec ret;
+  for(int i=0;i<REPEAT;i++){
+    ret = func(M, width, height, CS);
+  }
+
+  std::cout << "func="<<id<<" CS="<<CS<<" width="<<width<<" height="<<height<<" time="<<(tmr.elapsed()/REPEAT)<<" s"<<std::endl;
+  return ret;
+}
+
 
 
 int main(int argc, char **argv){
@@ -461,6 +554,12 @@ int main(int argc, char **argv){
   for(int i=0;i<width*height;i++)
     M[i] = rand() / (double) RAND_MAX;
 
+
+  // TimeDistance("simple_distance0",simple_distance0,M,width,height); return -1;
+
+  // TimeDistanceChunk("simple_distance_levi2",simple_distance_levi2,M,width,height,90); return -1;
+
+
   PrintVector("Original data", M, width, height);
 
   std::vector< std::pair<std::string, std::function< dvec(dvec,const int, const int) > > > funcs = {
@@ -471,16 +570,26 @@ int main(int argc, char **argv){
     //{GET_VARIABLE_NAME(simple_distance4), simple_distance4},
     //{GET_VARIABLE_NAME(simple_distance5), simple_distance5},
     //{GET_VARIABLE_NAME(simple_distance6), simple_distance6},
-    {GET_VARIABLE_NAME(simple_distance7), simple_distance7}
+    //{GET_VARIABLE_NAME(simple_distance7), simple_distance7},
+    //{GET_VARIABLE_NAME(simple_distance8), simple_distance8},
+    {GET_VARIABLE_NAME(simple_distance_levi1), simple_distance_levi1}
     //{GET_VARIABLE_NAME(distance_gpu), distance_gpu}
   };
 
   std::vector<std::pair<std::string,dvec > > ret;
 
-
   //ret.emplace_back("distance_eigen_square", EigenTest(distance_eigen_square, M, width, height));
   for(const auto &func: funcs)
     ret.emplace_back(func.first, TimeDistance(func.first, func.second, M, width, height));
+
+
+  std::cout<<std::endl;
+
+
+  // for(int cs=1;cs<120;cs++)
+  //   TimeDistanceChunk("simple_distance_levi2",simple_distance_levi2,M,width,height,cs);
+
+
 
   for(const auto &i: ret)
     PrintVector(i.first, i.second, height, height);

@@ -5,10 +5,10 @@
 #include "doctest.h"
 
 #include <iostream>
+#include <fstream>
 
 #include "mds.h"
 #include "fast_mds.h"
-#include "utils.h"
 #include "random.hpp"
 #include "Timer.hpp"
 
@@ -89,7 +89,8 @@ int main(int argc, char** argv) {
 
   const int desired_dim    = 3;                //Desired dimensionality
   const int rows_to_sample = desired_dim + 2;  //Sample size to use from each partition
-  const int partition_size = std::max(rows_to_sample + 1, ((int)M.rows()) / 100);
+  //const int partition_size = std::max(rows_to_sample + 1, ((int)M.rows()) / 100);
+  const int partition_size = std::max(rows_to_sample + 1, 1000);
 
   // perform FastMDS on the read-in matrix with partition_size, q, m as above
   MatrixXd result = fast_mds(M, partition_size, rows_to_sample, desired_dim);

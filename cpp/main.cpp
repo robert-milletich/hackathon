@@ -58,10 +58,14 @@ MatrixXd ReadMatrix(std::string filename){
   @param filename - the file to write to
 */
 void write_matrix(const MatrixXd& M, std::string filename) {
+  Timer tmr;
+
   std::ofstream fout(filename);
   if(!fout.good())
     throw std::runtime_error("Could not open output file '"+filename+"'!");
   fout << M;
+
+  std::cout<<"Data wrote in "<<tmr.elapsed()<<" s"<<std::endl;
 }
 
 
@@ -81,12 +85,16 @@ int main(int argc, char** argv) {
   // read in the matrix from infile
   MatrixXd M = ReadMatrix(infile);
 
+  Timer tmr;
+
   const int desired_dim    = 3;                //Desired dimensionality
   const int rows_to_sample = desired_dim + 2;  //Sample size to use from each partition
   const int partition_size = std::max(rows_to_sample + 1, ((int)M.rows()) / 100);
 
   // perform FastMDS on the read-in matrix with partition_size, q, m as above
   MatrixXd result = fast_mds(M, partition_size, rows_to_sample, desired_dim);
+
+  std::cout<<"Calculation time "<<tmr.elapsed()<<" s"<<std::endl;
 
   // write out the result to outfile
   write_matrix(result, outfile);

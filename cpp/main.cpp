@@ -4,6 +4,8 @@
 #include "mds.h"
 #include "fast_mds.h"
 #include "utils.h"
+#include "Timer.hpp"
+
 
 
 int main(int argc, char** argv) {
@@ -50,11 +52,15 @@ int main(int argc, char** argv) {
     std::string infile(in);
     std::string outfile(out);
 
+    Timer tmr;
+
     // read in the matrix from infile
     MatrixXd M = read_matrix(infile, rows, cols);
 
     // perform FastMDS on the read-in matrix with p, q, m as above
     MatrixXd result = fast_mds(M, p, q, m);
+
+    std::cout<<"Calculation time = "<<tmr.elapsed()<<std::endl;
 
     // write out the result to outfile
     write_matrix(result, outfile);

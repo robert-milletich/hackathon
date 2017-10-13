@@ -422,7 +422,8 @@ rows = 10000
 cols = 10000
 MAX_MDS_2 = 1000
 mat = np.random.rand(rows, cols)
-time_trials(gpu_dist_matrix, mat, time_to_wait)
+print("trials: {} | Time for {} rows and {} cols: {}".format(
+        1, rows, cols, "way too long to count"))
 
 print("MDS:")
 # Small MDS
@@ -444,7 +445,8 @@ rows = 10000
 cols = 500
 MAX_MDS_2 = 1000
 mat = np.random.rand(rows, cols)
-time_trials(mds, mat, time_to_wait)
+print("trials: {} | Time for {} rows and {} cols: {}".format(
+        1, rows, cols, "way too long to count"))
 
 print("FastMDS:")
 # Small FastMDS

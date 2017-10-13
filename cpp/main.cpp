@@ -10,6 +10,7 @@
 #include "fast_mds.h"
 #include "utils.h"
 #include "random.hpp"
+#include "Timer.hpp"
 
 #ifdef DOCTEST_CONFIG_DISABLE
 
@@ -25,6 +26,10 @@
     @return - a (rows X cols) matrix populated with values from filename
 */
 MatrixXd ReadMatrix(std::string filename){
+  Timer tmr;
+
+  std::cout<<"Reading data..."<<std::endl;
+
   std::ifstream fin(filename);
 
   if(!fin.good())
@@ -39,6 +44,8 @@ MatrixXd ReadMatrix(std::string filename){
   for(int y=0;y<rows;y++)
   for(int x=0;x<cols;x++)
     fin>>result(y,x);
+
+  std::cout<<"Data read in "<<tmr.elapsed()<<" s"<<std::endl;
 
   return result;
 }

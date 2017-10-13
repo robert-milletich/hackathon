@@ -1,6 +1,6 @@
 CC = g++
 CC_FLAGS = -g -std=c++11 -isystem . -DDOCTEST_CONFIG_DISABLE -Wall -Wextra -DEIGEN_DONT_PARALLELIZE
-OPTIMIZATION = -O3 -march=native -mtune=native
+OPTIMIZATION = -O3 -march=native -mtune=native -ffast-math
 WARNINGS = -pedantic -Wall -Wextra -Wfloat-equal -Wundef -Wcast-align -Wwrite-strings -Wlogical-op -Wredundant-decls -Wshadow -Woverloaded-virtual #-Wmissing-declarations 
 
 EXEC = main.exe

@@ -354,23 +354,134 @@ def find_strain(matrix1, matrix2):
     
     return np.sqrt(strain_sq)
 
-# For testing the function
-rows = 1000000
-dims = 100
-#assert rows * dims < MAX_MDS * MAX_MDS
-foo = np.random.rand(rows, dims)
-print("done creating")
-start = time.time()
-bar = fast_mds(foo)
-print("Time for {} rows and {} cols: {:.2f}".format(rows, dims, time.time() - start))
-#print("done creating")
-#start = time.time()
-#bar_sk = sk_mds(n_components=3)
-#print bar_sk.fit(foo)
-#print("Total time taken: {:.2f}".format(time.time() - start))
+def time_trials(func, mat, time_to_wait):
+    start = time.time()
+    out = func(mat)
+    runs = [time.time() - start]
+    timer = time.time()
+    while time.time() - timer < time_to_wait:
+        start = time.time()
+        out = func(mat)
+        runs.append(time.time() - start)
+    print("trials: {} | Time for {} rows and {} cols: {}".format(
+            len(runs), mat.shape[0], mat.shape[1], np.mean(runs)))
 
-#start = time.time()
-#baz = fast_mds_recursion(foo)
-#print("Total time taken: {:.2f}".format(time.time() - start))
-#
-#print (bar == baz).all()
+time_to_wait = 5
+
+print("Eigendecomposition:")
+# Small EigenDecomp
+rows = 500
+cols = 500
+d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+d_s = (-1./2.)*d_sq
+mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+start = time.time()
+out = SP.eigsh(mat, k=DIMENSIONS)
+runs = [time.time() - start]
+timer = time.time()
+while time.time() - timer < time_to_wait:
+    start = time.time()
+    out = SP.eigsh(mat, k=DIMENSIONS)
+    runs.append(time.time() - start)
+print("trials: {} | Time for {} rows and {} cols: {}".format(
+        len(runs), mat.shape[0], mat.shape[1], np.mean(runs)))
+
+# Medium EigenDecomp
+rows = 2000
+cols = 2000
+d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+d_s = (-1./2.)*d_sq
+mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+start = time.time()
+out = SP.eigsh(mat, k=DIMENSIONS)
+runs = [time.time() - start]
+timer = time.time()
+while time.time() - timer < time_to_wait:
+    start = time.time()
+    out = SP.eigsh(mat, k=DIMENSIONS)
+    runs.append(time.time() - start)
+print("trials: {} | Time for {} rows and {} cols: {}".format(
+        len(runs), mat.shape[0], mat.shape[1], np.mean(runs)))
+
+# Large EigenDecomp
+rows = 10000
+cols = 100
+d_sq = gpu_dist_matrix(np.random.randn(rows, cols))
+d_s = (-1./2.)*d_sq
+mat = d_s - d_s.mean(axis=1) - d_s.mean(axis=0)[None].T + d_s.mean()
+start = time.time()
+out = SP.eigsh(mat, k=DIMENSIONS)
+runs = [time.time() - start]
+timer = time.time()
+while time.time() - timer < time_to_wait:
+    start = time.time()
+    out = SP.eigsh(mat, k=DIMENSIONS)
+    runs.append(time.time() - start)
+print("trials: {} | Time for {} rows and {} cols: {}".format(
+        len(runs), mat.shape[0], mat.shape[1], np.mean(runs)))
+
+print("Distance Matrix:")
+# Small distance matrix
+rows = 500
+cols = 100
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(gpu_dist_matrix, mat, time_to_wait)
+
+# Medium distance matrix
+rows = 2000
+cols = 2000
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(gpu_dist_matrix, mat, time_to_wait)
+
+# Large distance matrix
+rows = 10000
+cols = 10000
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(gpu_dist_matrix, mat, time_to_wait)
+
+print("MDS:")
+# Small MDS
+rows = 500
+cols = 100
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(mds, mat, time_to_wait)
+
+# Medium MDS
+rows = 2000
+cols = 200
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(mds, mat, time_to_wait)
+
+# Large MDS
+rows = 10000
+cols = 500
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(mds, mat, time_to_wait)
+
+print("FastMDS:")
+# Small FastMDS
+rows = 1000
+cols = 10
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(fast_mds, mat, time_to_wait)
+
+# Medium FastMDS
+rows = 50000
+cols = 100
+MAX_MDS_2 = 1000
+mat = np.random.rand(rows, cols)
+time_trials(fast_mds, mat, time_to_wait)
+
+# Large FastMDS
+rows = 500000
+cols = 500
+MAX_MDS_2 = 5000
+mat = np.random.rand(rows, cols)
+time_trials(fast_mds, mat, time_to_wait)

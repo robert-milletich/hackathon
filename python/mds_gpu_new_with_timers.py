@@ -441,19 +441,19 @@ time_to_wait = 5
 #time_trials(mds, mat, time_to_wait)
 
 print("FastMDS:")
-# Small FastMDS
-rows = 1000
-cols = 10
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(fast_mds, mat, time_to_wait)
-
-# Medium FastMDS
-rows = 50000
-cols = 100
-MAX_MDS_2 = 1000
-mat = np.random.rand(rows, cols)
-time_trials(fast_mds, mat, time_to_wait)
+## Small FastMDS
+#rows = 1000
+#cols = 10
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(fast_mds, mat, time_to_wait)
+#
+## Medium FastMDS
+#rows = 50000
+#cols = 100
+#MAX_MDS_2 = 1000
+#mat = np.random.rand(rows, cols)
+#time_trials(fast_mds, mat, time_to_wait)
 
 # Large FastMDS
 rows = 500000

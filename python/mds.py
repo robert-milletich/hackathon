@@ -24,59 +24,59 @@ class MDSError(Exception):
 def mds(input_matrix):
     """Take in a matrix and return classical mds in 3-dimensions"""
 
-    assert len(input_matrix) > DIMENSIONS   
+    assert len(input_matrix) > DIMENSIONS
     assert len(input_matrix) < MAX_MDS
     mat = np.array(input_matrix)
-    
+
     # Squared proximity matrix D^(2)
     n_ = len(mat)
     d_mat = spatial.distance.cdist(mat, mat)
-    d_sq = d_mat * d_mat 
+    d_sq = d_mat * d_mat
     j_ = np.identity(n_) - (np.ones([n_, n_]) / float(n_))
     b_ = np.dot(np.dot((-1./2.) * j_, d_sq), j_)
-    
+
 #     Attempt 1 of eig
     eig_vals, eig_vecs = SP.eigsh(b_, k=DIMENSIONS)
-    
+
     vecs = np.fliplr(eig_vecs)
     vals = eig_vals[::-1]
     x_ = np.dot(vecs, np.sqrt(np.diag(vals)))
-    
+
 ##     Attempt 2 of eig
 #    e_vals, e_vecs = LA.eigh(b_, turbo=True, eigvals=(len(b_)-DIMENSIONS, len(b_)-1))
 #    vecs = np.fliplr(e_vecs)
 #    vals = e_vals[::-1]
 #    x_ = np.dot(vecs, np.sqrt(np.diag(vals)))
-    
+
 #    # Attempt 3 of eig
 #    eig_vals, eig_vecs = LA.eigh(b_, turbo=True) # The bottleneck at 50%
-#    
+#
 #    eig = sorted(list(zip(eig_vals, np.transpose(eig_vecs))),\
 #                                            reverse=True)[:DIMENSIONS]
 #    vals_m = np.array([row[0] for row in eig])
 #    vecs_m = np.transpose(np.array([row[1] for row in eig]))
 #    x_ = np.dot(vecs_m, np.sqrt(np.diag(vals_m)))
-    
+
     return np.real(x_)
 
 prev = 0
 def fast_mds_recursion(input_matrix):
     """Subsets mds using FastMDS and return mds in 3-dimensions
-    
+
     Whole matrix is mat
     each subset is ss
     each sample is sp
-    
-    Need to add in computations for RAM and whether the dataset is small 
+
+    Need to add in computations for RAM and whether the dataset is small
     enough for regular mds.  Need to rewrite to remove recursion
-    
+
     10 million 10 dimensions works in 382 seconds
     """
-    
+
     mat = np.array(input_matrix)
     assert len(mat) > DIMENSIONS
     assert len(set(len(row) for row in mat)) == 1
-    
+
     # Partition matrix
     max_mds = MAX_MDS_2
     dims = len(mat[0])
@@ -87,19 +87,19 @@ def fast_mds_recursion(input_matrix):
         return mds(mat)
     ss_size = int(np.ceil(float(len(mat)) / (one_num_ss - 2)))
     num_ss = int(np.ceil(float(len(mat)) / ss_size))
-    
+
     if max_mds < sp_size * 2:
         max_mds = sp_size * 2
     if max_mds > MAX_MDS:
         raise MDSError
     assert ss_size > sp_size
     assert ss_size > (sp_size * num_ss)
-    
+
     ss_mat = [mat[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
     to_flatten = [mtr[:sp_size] for mtr in ss_mat]
     d_align = np.array([item for sublist in to_flatten for item in sublist])
-    
-    
+
+
     dMDS = []
     m_align = []
     if ss_size > max_mds:
@@ -110,20 +110,20 @@ def fast_mds_recursion(input_matrix):
             prev = ss_size2
         if ss_size2 == ss_size:
             raise MDSError
-        
+
         dMDS = [fast_mds_recursion(mtr) for mtr in ss_mat]
         m_align = fast_mds_recursion(d_align)
     else:
         dMDS = [mds(np.array(mtr)) for mtr in ss_mat]
         m_align = mds(d_align)
-    
+
     sub_dMDS = [mtr[:sp_size] for mtr in dMDS]
     sub_mMDS = [m_align[i*sp_size: (i+1)*sp_size] for i in range(num_ss)]
-    
+
     assert len(sub_mMDS) == len(sub_dMDS)
     for r_i in range(len(sub_mMDS)):
         assert len(sub_dMDS[r_i]) == len(sub_mMDS[r_i])
-    
+
     all_mds = []
     for m_i, mtr in enumerate(dMDS):
         sub_mMDS_i = sub_mMDS[m_i]
@@ -131,7 +131,7 @@ def fast_mds_recursion(input_matrix):
         lstsq = np.linalg.lstsq(sub_dMDS_i, sub_mMDS_i)[0]
         mtr_ones = np.c_[mtr, np.ones(len(mtr))]
         all_mds.append(np.dot(mtr_ones, lstsq))
-    
+
     return np.array([item for sublist in all_mds for item in sublist])
 
 def partition_matrix(input_matrix):
@@ -140,7 +140,7 @@ def partition_matrix(input_matrix):
     assert len(set(len(row) for row in input_matrix)) == 1 # matrix-shaped
     assert len(input_matrix) > DIMENSIONS
     mat = np.array(input_matrix, dtype=np.float64)
-    
+
     # Partition matrix
     max_mds = MAX_MDS_2
     dims = len(mat[0])
@@ -150,26 +150,26 @@ def partition_matrix(input_matrix):
     assert one_num_ss > DIMENSIONS
     ss_size = int(np.ceil(float(len(mat)) / (one_num_ss - 2)))
     num_ss = int(np.ceil(float(len(mat)) / ss_size))
-    
+
     if max_mds < sp_size * 2:
         max_mds = sp_size * 2
     if max_mds > MAX_MDS:
         raise MDSError
-        
+
     assert ss_size > sp_size
     assert ss_size > (sp_size * num_ss)
-    
+
     ss_mat = [mat[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
-    
+
     to_flatten = [mtr[:sp_size] for mtr in ss_mat]
     d_align = np.array([item for sublist in to_flatten for item in sublist])
-    
+
     output = [["pre-mds", mtr] for mtr in ss_mat]
     output.append(["pre-mds", d_align])
     output.append(["ind", [sp_size, num_ss]])
-    
+
     return output
-    
+
 def deep_list(ndarray, list_en):
     """Return the depth in the ndarray given in list_en"""
     output = ndarray
@@ -178,8 +178,8 @@ def deep_list(ndarray, list_en):
     return output
 
 def deep_partition(input_array):
-    
-    
+
+
     assert len(set(len(row) for row in input_array)) == 1 # matrix-shaped
     assert len(input_array) > DIMENSIONS
     mat = np.array(input_array, dtype=np.float64)
@@ -191,7 +191,7 @@ def deep_partition(input_array):
         max_mds = sp_size * 2
     if max_mds > MAX_MDS:
         raise MDSError
-    
+
     super_arr = [["pre-sub", partition_matrix(mat)]]
     flag = True
     all_ss = [[], [], []]
@@ -213,12 +213,12 @@ def deep_partition(input_array):
                 all_ss = all_ss[:-1]
         if all_ss[-1] == []:
             flag = False
-    
+
     return super_arr
 
 def mds_each_part(super_arr):
     """Compute mds of each section created in fast_mds and recombine"""
-    
+
     flag = True
     all_ss = [[], [], []]
     while flag:
@@ -233,26 +233,26 @@ def mds_each_part(super_arr):
             elif nd_arr[0] == "pre-mds":
                 sub_arr[i] = ["post-mds", mds(nd_arr[1])]
             elif nd_arr[0] == "ind":
-                
+
                 # Create recombined object named flat_mds
                 assert sub_arr[-1][0] == "ind"
                 assert list(set(row[0] for row in sub_arr[:-1]))[0] == \
                                                             "post-mds"
                 assert len(set(row[0] for row in sub_arr[:-1])) == 1
-                
+
                 indicate = sub_arr[-1][1]
                 sp_size, num_ss = indicate[0], indicate[1]
                 dMDS = [row[1] for row in sub_arr[:-2]]
                 m_align = sub_arr[-2][1]
-                
+
                 sub_dMDS = [mtr[:sp_size] for mtr in dMDS]
                 sub_mMDS = [m_align[i*sp_size: (i+1)*sp_size] for i in \
                                                         range(num_ss)]
-                
+
                 assert len(sub_mMDS) == len(sub_dMDS)
                 for r_i in range(len(sub_mMDS)):
                     assert len(sub_dMDS[r_i]) == len(sub_mMDS[r_i])
-                    
+
                 all_mds = []
                 for m_i, mtr in enumerate(dMDS):
                     sub_mMDS_i = sub_mMDS[m_i]
@@ -263,46 +263,46 @@ def mds_each_part(super_arr):
                     all_mds.append(np.dot(mtr_ones, lstsq))
                 flat_mds = np.array([item for sublist in all_mds for item\
                                                             in sublist])
-                
+
                 # Replace list of matrices with recombined object
                 sup_arr[0] = "post-mds"
                 sup_arr[1] = flat_mds
                 all_ss = all_ss[:-2]
                 break
-            
+
         if super_arr[0][0] == "post-mds":
             flag = False
-    
+
     assert len(super_arr) == 1
     assert len(super_arr[0]) == 2
     assert super_arr[0][0] == "post-mds"
     assert len(set(len(row) for row in super_arr[0][1])) == 1 # matrix-shaped
-    
+
     return super_arr[0][1]
 
 def fast_mds(inp_matrix):
     """Subsets mds using FastMDS and return mds in 3-dimensions
-    
-    Need to add in computations for RAM and whether the dataset is small 
-    enough for regular mds.  
+
+    Need to add in computations for RAM and whether the dataset is small
+    enough for regular mds.
     """
-    
+
     deep = deep_partition(inp_matrix)
     output = mds_each_part(deep)
     return output
 
 def find_strain(matrix1, matrix2):
     """Return the strain between mat1 and mat2"""
-    
+
     mat1 = np.array(matrix1)
     mat2 = np.array(matrix2)
     assert len(mat1) == len(mat2)
-    
+
     ss_size = int(np.floor(MAX_MDS * MAX_MDS * .1 / float(len(mat1))))
     num_ss = int(np.ceil(len(mat1) / float(ss_size)))
     ss_mat1 = [mat1[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
     ss_mat2 = [mat2[(i*ss_size) : int((i+1) * ss_size)] for i in range(num_ss)]
-    
+
     strain_sq = 0
     for i in range(len(ss_mat1)):
         i1, i2 = ss_mat1[i], ss_mat2[i]
@@ -310,17 +310,21 @@ def find_strain(matrix1, matrix2):
         d2 = spatial.distance.cdist(i2, mat2, metric='mahalanobis')
         d_diff = d1 - d2
         strain_sq += np.sum(d_diff * d_diff)
-    
+
     return np.sqrt(strain_sq)
 
 # For testing the function
-rows = 100000
+rows = 1000
 dims = 10
 #assert rows * dims < MAX_MDS * MAX_MDS
 foo = np.random.rand(rows, dims)
 print("done creating")
 start = time.time()
 bar = fast_mds(foo)
+
+print foo.shape
+print bar.shape
+
 print("Total time taken: {:.2f}".format(time.time() - start))
 #print("done creating")
 #start = time.time()
